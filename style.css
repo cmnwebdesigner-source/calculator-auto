@@ -1382,3 +1382,359 @@
     padding: 14px;
   }
 }
+
+/* Cautare masina - dropdown mic, cu scroll real pe telefon si laptop */
+.field.search-field {
+  position: relative;
+  z-index: 20;
+}
+
+#car-search {
+  min-height: 48px;
+}
+
+.search-results {
+  position: relative;
+  z-index: 100;
+  display: block;
+  width: 100%;
+  max-height: 132px;
+  overflow-y: scroll !important;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  margin-top: 9px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, .98);
+  box-shadow: var(--shadow-soft);
+  scrollbar-width: thin;
+}
+
+.search-results:empty {
+  display: none;
+}
+
+.search-results::-webkit-scrollbar {
+  width: 6px;
+}
+
+.search-results::-webkit-scrollbar-track {
+  background: rgba(226, 232, 240, .45);
+  border-radius: 999px;
+}
+
+.search-results::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(15, 118, 110, .45);
+}
+
+.search-result {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  padding: 8px 10px;
+  margin: 0 0 6px;
+  text-align: left;
+  color: var(--ink);
+  display: block;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color .16s ease, background .16s ease, box-shadow .16s ease;
+}
+
+.search-result:last-child {
+  margin-bottom: 0;
+}
+
+.search-result:hover,
+.search-result:focus-visible {
+  border-color: rgba(15, 118, 110, .35);
+  background: #f8fffd;
+  box-shadow: 0 6px 16px rgba(15, 118, 110, .08);
+  outline: none;
+}
+
+.search-result strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 850;
+  line-height: 1.25;
+}
+
+.search-result span {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.search-empty {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: #fffbeb;
+  border: 1px solid rgba(217, 119, 6, .22);
+  color: #92400e;
+  font-size: 11px;
+  line-height: 1.35;
+  font-weight: 750;
+}
+
+/* FIX FINAL: mobil ordonat + lista cautare mica */
+@media (max-width: 820px) {
+  .premium-visual {
+    display: none !important;
+  }
+
+  .hero-main {
+    grid-template-columns: 1fr !important;
+    min-height: auto;
+  }
+
+  .workspace,
+  .summary-rail,
+  .terms-wrap {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .app {
+    padding: 10px;
+  }
+
+  .topbar {
+    padding: 10px 0 12px;
+    gap: 10px;
+  }
+
+  .brand {
+    gap: 9px;
+  }
+
+  .brand-mark {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+  }
+
+  .brand-copy strong {
+    font-size: 13px;
+  }
+
+  .brand-copy span {
+    font-size: 10.5px;
+    line-height: 1.25;
+  }
+
+  .hero {
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .hero-copy {
+    padding: 14px;
+    gap: 12px;
+  }
+
+  h1 {
+    font-size: 1.68rem !important;
+    line-height: 1.08 !important;
+    margin-bottom: 9px;
+  }
+
+  .hero-copy p {
+    font-size: .84rem;
+    line-height: 1.45;
+  }
+
+  .hero-actions {
+    gap: 8px;
+  }
+
+  .primary-btn,
+  .secondary-btn,
+  .mini-btn {
+    min-height: 42px;
+    padding: 0 12px;
+    font-size: 12px;
+  }
+
+  .live-strip,
+  .panel,
+  .summary-panel,
+  .terms-panel {
+    padding: 13px !important;
+  }
+
+  .live-title h2,
+  .panel-title h2,
+  .summary-panel h2,
+  .terms-panel h2 {
+    font-size: 15px !important;
+  }
+
+  .panel-title p,
+  .terms-panel p,
+  .terms-panel li,
+  .field-hint,
+  .summary-row,
+  .receipt-line,
+  .receipt-highlight,
+  .live-meta {
+    font-size: 10.8px !important;
+    line-height: 1.42 !important;
+  }
+
+  .field-grid,
+  .option-row,
+  .price-cards {
+    grid-template-columns: 1fr !important;
+    gap: 9px;
+  }
+
+  .field-stack {
+    gap: 10px;
+  }
+
+  .field label,
+  .field-label {
+    font-size: 11px;
+    margin-bottom: 6px;
+  }
+
+  .control,
+  select {
+    min-height: 44px;
+    font-size: 13px;
+    padding-left: 11px;
+    padding-right: 34px;
+  }
+
+  .input-wrap .control {
+    min-height: 48px;
+    font-size: 18px;
+    padding-right: 74px;
+  }
+
+  .price-wrap .control {
+    min-height: 50px;
+    font-size: 1.35rem;
+  }
+
+  .segmented {
+    gap: 6px;
+    padding: 5px;
+  }
+
+  .segmented button {
+    min-height: 38px;
+    font-size: 11px;
+  }
+
+  .route-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 7px;
+    overflow: visible;
+  }
+
+  .route-card {
+    min-height: 72px !important;
+    padding: 9px 5px;
+  }
+
+  .route-card i {
+    font-size: 16px;
+  }
+
+  .route-card span {
+    font-size: 10.5px;
+  }
+
+  .route-card small {
+    font-size: 9px;
+  }
+
+  .counter,
+  .toggle-btn {
+    min-height: 46px;
+  }
+
+  .summary-total {
+    gap: 6px;
+  }
+
+  #total-cost {
+    font-size: 2.12rem !important;
+  }
+
+  .currency {
+    font-size: 13px;
+  }
+
+  .summary-row {
+    padding: 7px 0;
+    gap: 9px;
+  }
+
+  .summary-row strong,
+  .receipt-line strong {
+    max-width: 58%;
+  }
+
+  .receipt-sheet {
+    max-height: 92dvh;
+  }
+
+  .modal-head,
+  .modal-foot,
+  .receipt-body {
+    padding: 11px !important;
+  }
+
+  .receipt-card {
+    padding: 12px;
+  }
+
+  .receipt-total {
+    padding: 14px;
+  }
+
+  .receipt-total strong {
+    font-size: 24px !important;
+  }
+
+  .search-results {
+    max-height: 124px;
+    padding: 5px;
+  }
+
+  .search-result {
+    min-height: 40px;
+    padding: 7px 9px;
+    margin-bottom: 5px;
+  }
+
+  .search-result strong {
+    font-size: 11.2px;
+  }
+
+  .search-result span {
+    font-size: 9.4px;
+  }
+
+  .footer {
+    font-size: 10.5px;
+    gap: 8px;
+  }
+}
