@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Calculator premium pentru costul combustibilului, cu preturi live la benzina, motorina si GPL in Romania.">
+  <title>Cost Combustibil Live</title>
+  <link rel="icon" type="image/png" href="./assets/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+    <link rel="stylesheet" href="./style.css">
+
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <a class="brand" href="#calculator" aria-label="Cost Combustibil Live">
+        <span class="brand-mark"><img src="./assets/logo.png" alt="Cost Combustibil Live"></span>
+        <span class="brand-copy">
+          <strong>Cost Combustibil Live</strong>
+          <span>Calculator cu preturi actualizate pentru Romania</span>
+        </span>
+      </a>
+      <nav class="nav" aria-label="Navigatie">
+        <a href="#calculator"><i class="fa-solid fa-calculator"></i> Calculator</a>
+        <a href="#despre"><i class="fa-solid fa-circle-info"></i> Despre</a>
+        <a href="#termeni"><i class="fa-solid fa-file-contract"></i> Termeni</a>
+      </nav>
+    </header>
+
+    <section class="hero" aria-label="Prezentare">
+      <div class="hero-main">
+        <div class="hero-copy">
+          <div>
+            <h1>Costul drumului, calculat la pretul de azi.</h1>
+            <p>Alegi masina, carburantul, orasul si conditiile de mers. Aplicatia aduce automat preturi agregate pentru benzina, motorina si GPL, dar pastreaza si editarea manuala.</p>
+          </div>
+          <div class="hero-actions">
+            <a class="primary-btn" href="#calculator"><i class="fa-solid fa-bolt"></i> Calculeaza acum</a>
+            <button class="secondary-btn" type="button" id="hero-refresh-btn"><i class="fa-solid fa-rotate"></i> Actualizeaza preturi</button>
+          </div>
+        </div>
+        
+        <div class="premium-visual" aria-hidden="true">
+          <div class="hero-art-frame">
+            <img src="./assets/hero-masina.png" alt="Ilustratie traseu cu masina" loading="eager" decoding="async">
+          </div>
+        </div>
+
+      </div>
+
+      </div>
+
+      <aside class="live-strip" aria-label="Preturi live">
+        <div class="live-title">
+          <h2>Preturi live</h2>
+          <span class="status-pill" id="api-status"><i class="fa-solid fa-circle-notch fa-spin"></i> Se incarca</span>
+        </div>
+        <p class="live-meta" id="api-meta">Conectare la sursa de date...</p>
+        <div class="price-cards">
+          <div class="fuel-card">
+            <span>Motorina</span>
+            <strong id="card-motorina">--</strong>
+            <small>Lei/L</small>
+          </div>
+          <div class="fuel-card">
+            <span>Benzina 95</span>
+            <strong id="card-benzina">--</strong>
+            <small>Lei/L</small>
+          </div>
+          <div class="fuel-card">
+            <span>GPL</span>
+            <strong id="card-gpl">--</strong>
+            <small>Lei/L</small>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <main class="workspace" id="calculator">
+      <div class="column">
+        <section class="panel" aria-labelledby="car-title">
+          <div class="panel-header">
+            <div class="panel-title">
+              <span class="panel-icon"><i class="fa-solid fa-car-side"></i></span>
+              <div>
+                <h2 id="car-title">Autoturism</h2>
+                <p>Catalog rapid sau consum introdus manual.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="field-stack">
+            <div class="field-grid">
+              <div class="field">
+                <label for="brand">Marca</label>
+                <select id="brand">
+                  <option value="">Selecteaza marca</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="model">Model</label>
+                <select id="model" disabled>
+                  <option value="">Selecteaza modelul</option>
+                </select>
+              </div>
+            </div>
+            <div class="field">
+              <label for="engine">Motorizare</label>
+              <select id="engine" disabled>
+                <option value="">Alege motorizarea</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="field">
+            <label for="base-consumption">Consum mixt</label>
+            <div class="input-wrap">
+              <input class="control" id="base-consumption" type="number" inputmode="decimal" min="0" max="40" step="0.1" placeholder="6.5">
+              <span class="unit">L/100km</span>
+            </div>
+            <span class="field-hint">Valorile din catalog sunt orientative; poti ajusta consumul dupa masina ta.</span>
+          </div>
+        </section>
+
+        <section class="panel" aria-labelledby="fuel-title">
+          <div class="panel-header">
+            <div class="panel-title">
+              <span class="panel-icon"><i class="fa-solid fa-droplet"></i></span>
+              <div>
+                <h2 id="fuel-title">Combustibil</h2>
+                <p>Pret live pe oras sau valoare manuala.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="segmented" role="group" aria-label="Tip combustibil">
+            <button type="button" class="active" data-fuel="motorina" aria-pressed="true">Motorina</button>
+            <button type="button" data-fuel="benzina" aria-pressed="false">Benzina</button>
+            <button type="button" data-fuel="gpl" aria-pressed="false">GPL</button>
+          </div>
+
+          <div class="field-stack" style="margin-top: 14px;">
+            <div class="field-grid">
+              <div class="field">
+                <label for="price-area">Zona pret</label>
+                <select id="price-area">
+                  <option value="national">Medie nationala</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="price-source-mode">Mod pret</label>
+                <select id="price-source-mode">
+                  <option value="live">Live API</option>
+                  <option value="manual">Manual</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="fuel-price">Pret la pompa</label>
+              <div class="input-wrap price-wrap">
+                <input class="control" id="fuel-price" type="number" inputmode="decimal" min="0" max="30" step="0.01" value="9.60">
+                <span class="unit">Lei/L</span>
+              </div>
+              <span class="field-hint" id="price-note">Pretul se completeaza automat din API cand modul live este activ.</span>
+            </div>
+
+            <button class="ghost-btn" type="button" id="refresh-prices-btn"><i class="fa-solid fa-rotate"></i> Reincarca preturile</button>
+            <div class="message" id="price-message"><i class="fa-solid fa-satellite-dish"></i> Se pregateste sincronizarea preturilor.</div>
+          </div>
+        </section>
+      </div>
+
+      <div class="column">
+        <section class="panel" aria-labelledby="trip-title">
+          <div class="panel-header">
+            <div class="panel-title">
+              <span class="panel-icon"><i class="fa-solid fa-route"></i></span>
+              <div>
+                <h2 id="trip-title">Calatorie</h2>
+                <p>Distantata si factorii care schimba consumul real.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="field-stack">
+            <div class="field">
+              <label for="distance">Distanta</label>
+              <div class="input-wrap">
+                <input class="control" id="distance" type="number" inputmode="decimal" min="0" max="10000" step="1" placeholder="ex: 150">
+                <span class="unit">KM</span>
+              </div>
+            </div>
+
+            <button class="toggle-btn" type="button" id="roundtrip-btn" aria-pressed="false">
+              <i class="fa-solid fa-arrow-right-arrow-left"></i>
+              <span>Dus-intors oprit</span>
+            </button>
+          </div>
+
+          <div class="divider"></div>
+
+          <span class="field-label">Tip traseu</span>
+          <div class="route-grid" role="group" aria-label="Tip traseu">
+            <button class="route-card" type="button" data-route="urban" aria-pressed="false">
+              <i class="fa-solid fa-city"></i>
+              <span>Oras</span>
+              <small>+20%</small>
+            </button>
+            <button class="route-card active" type="button" data-route="mixt" aria-pressed="true">
+              <i class="fa-solid fa-road"></i>
+              <span>Mixt</span>
+              <small>normal</small>
+            </button>
+            <button class="route-card" type="button" data-route="extra" aria-pressed="false">
+              <i class="fa-solid fa-gauge-high"></i>
+              <span>Extern</span>
+              <small>-10%</small>
+            </button>
+          </div>
+
+          <div class="option-row" style="margin-top: 14px;">
+            <button class="toggle-btn" type="button" id="ac-btn" aria-pressed="false">
+              <i class="fa-solid fa-snowflake"></i>
+              <span>AC oprit</span>
+            </button>
+            <div class="counter" aria-label="Numar pasageri">
+              <span class="counter-label"><i class="fa-solid fa-users"></i> Pasageri</span>
+              <div class="stepper">
+                <button class="step-btn" type="button" id="pass-minus" aria-label="Scade numarul de pasageri"><i class="fa-solid fa-minus"></i></button>
+                <span id="passengers">1</span>
+                <button class="step-btn" type="button" id="pass-plus" aria-label="Creste numarul de pasageri"><i class="fa-solid fa-plus"></i></button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" aria-labelledby="details-title">
+          <div class="panel-header">
+            <div class="panel-title">
+              <span class="panel-icon"><i class="fa-solid fa-list-check"></i></span>
+              <div>
+                <h2 id="details-title">Detalii calcul</h2>
+                <p>Rezumatul se actualizeaza la fiecare schimbare.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="summary-list">
+            <div class="summary-row"><span>Masina</span><strong id="summary-car">Nespecificata</strong></div>
+            <div class="summary-row"><span>Distanta calculata</span><strong><span id="summary-distance">0</span> km</strong></div>
+            <div class="summary-row"><span>Consum real estimat</span><strong><span id="summary-real-cons">0.0</span> L/100km</strong></div>
+            <div class="summary-row"><span>Litri necesari</span><strong><span id="summary-liters">0.00</span> L</strong></div>
+            <div class="summary-row"><span>Sursa pret</span><strong id="summary-source">Live API</strong></div>
+          </div>
+        </section>
+      </div>
+
+      <aside class="column summary-rail">
+        <section class="summary-panel" aria-label="Cost estimat">
+          <div class="summary-top">
+            <div>
+              <h2>Cost estimat</h2>
+              <div class="field-hint" id="summary-subtitle">Completeaza distanta si consumul.</div>
+            </div>
+            <button class="icon-btn" type="button" id="open-receipt-btn" aria-label="Deschide detalii"><i class="fa-solid fa-receipt"></i></button>
+          </div>
+          <div class="summary-total">
+            <span id="total-cost">0.00</span>
+            <span class="currency">Lei</span>
+          </div>
+          <button class="primary-btn" type="button" id="receipt-btn"><i class="fa-solid fa-file-invoice-dollar"></i> Detalii si PDF</button>
+        </section>
+      </aside>
+    </main>
+
+    <section class="terms-wrap" aria-label="Informatii utile">
+      <article class="terms-panel" id="despre">
+        <h2>Despre</h2>
+        <p>Aplicatia estimeaza costul combustibilului pe baza consumului masinii, distantei si conditiilor de drum. Preturile live sunt preluate din API-ul public PretCarburant.ro, iar campul de pret ramane editabil pentru situatiile in care pretul vazut la pompa difera.</p>
+        <p>Rezultatul este o estimare pentru bugetare. Consumul real poate varia in functie de stilul de condus, sarcina, trafic, vreme, anvelope si starea tehnica a masinii.</p>
+      </article>
+
+      <article class="terms-panel" id="termeni">
+        <h2>Termeni si conditii</h2>
+        <ul>
+          <li>Calculatorul nu garanteaza pretul final de la statia de alimentare.</li>
+          <li>Datele live trebuie verificate inainte de alimentare, mai ales pentru calatorii lungi sau flote.</li>
+          <li>PDF-ul generat are rol informativ si nu reprezinta document fiscal.</li>
+          <li>Prin folosirea aplicatiei accepti ca estimarea poate include erori de date, rotunjiri sau indisponibilitatea temporara a API-ului.</li>
+        </ul>
+      </article>
+    </section>
+
+    <footer class="footer">
+      <span>Surse preturi: <a href="https://pretcarburant.ro/api" target="_blank" rel="noopener">PretCarburant.ro API</a> si date agregate din <a href="https://monitorulpreturilor.info/Home/Gas/Descriere" target="_blank" rel="noopener">Monitorul Preturilor</a>.</span>
+      <span>Actualizat local la <span id="local-updated">--</span></span>
+    </footer>
+  </div>
+
+  <div id="receipt-modal" role="dialog" aria-modal="true" aria-labelledby="receipt-title">
+    <div class="receipt-sheet">
+      <div class="modal-head">
+        <div class="modal-title" id="receipt-title"><i class="fa-solid fa-receipt"></i> Deviz combustibil</div>
+        <button class="icon-btn" type="button" id="close-receipt-btn" aria-label="Inchide"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="receipt-body">
+        <div class="receipt-card">
+          <div class="receipt-line"><span>Autoturism</span><strong id="r-car">Nespecificat</strong></div>
+          <div class="receipt-line"><span>Distantata totala</span><strong><span id="r-distance">0</span> km</strong></div>
+          <div class="receipt-line"><span>Consum de baza</span><strong><span id="r-base">0.0</span> L/100km</strong></div>
+          <div class="receipt-line"><span>Traseu</span><strong id="r-route">Mixt</strong></div>
+          <div class="receipt-line"><span>Climatizare</span><strong id="r-ac">Oprit</strong></div>
+          <div class="receipt-line"><span>Pasageri extra</span><strong><span id="r-pass">+0.0</span> L/100km</strong></div>
+          <div class="receipt-highlight"><span>Consum real estimat</span><strong><span id="r-real">0.0</span> L/100km</strong></div>
+          <div class="receipt-line"><span>Volum combustibil</span><strong><span id="r-liters">0.00</span> L</strong></div>
+          <div class="receipt-line"><span>Pret folosit</span><strong><span id="r-price">0.00</span> Lei/L</strong></div>
+          <div class="receipt-line"><span>Sursa</span><strong id="r-source">Live API</strong></div>
+          <div class="receipt-total">
+            <small><span id="r-formula">0.00 L x 0.00 Lei</span></small>
+            <strong><span id="r-total">0.00</span> Lei</strong>
+          </div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="primary-btn" type="button" id="download-pdf-btn" style="width: 100%;"><i class="fa-solid fa-file-pdf"></i> Descarca PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="pdf-container" aria-hidden="true">
+    <div class="pdf-page">
+      <div class="pdf-head">
+        <div>
+          <div class="pdf-doc-title">Deviz cost combustibil</div>
+          <p>Generat de Cost Combustibil Live</p>
+        </div>
+        <div class="pdf-mark"><img src="./assets/logo.png" alt="Logo"></div>
+      </div>
+
+      <div class="pdf-grid">
+        <div class="pdf-box">
+          <h3>Autoturism</h3>
+          <p><strong id="pdf-car">Nespecificat</strong></p>
+          <p>Consum baza: <strong><span id="pdf-base">0.0</span> L/100km</strong></p>
+          <p>Combustibil: <strong id="pdf-fuel">Motorina</strong></p>
+        </div>
+        <div class="pdf-box">
+          <h3>Calatorie</h3>
+          <p>Distantata: <strong><span id="pdf-distance">0</span> km</strong></p>
+          <p>Pret: <strong><span id="pdf-price">0.00</span> Lei/L</strong></p>
+          <p>Sursa pret: <strong id="pdf-source">Live API</strong></p>
+        </div>
+      </div>
+
+      <h2 style="margin: 0 0 10px; font-size: 20px; letter-spacing: -.035em;">Calcul consum</h2>
+      <table class="pdf-table">
+        <tr><td>Consum baza</td><td><span id="pdf-t-base">0.0</span> L/100km</td></tr>
+        <tr><td>Ajustare traseu</td><td><span id="pdf-t-route">0%</span></td></tr>
+        <tr><td>Ajustare AC</td><td><span id="pdf-t-ac">0%</span></td></tr>
+        <tr><td>Ajustare pasageri</td><td><span id="pdf-t-pass">+0.0</span> L/100km</td></tr>
+        <tr style="background:#e5f3ef;color:#0f4e47;"><td style="font-weight:900;">Consum real estimat</td><td><span id="pdf-t-real">0.0</span> L/100km</td></tr>
+      </table>
+
+      <div class="pdf-final">
+        <div>
+          <small>Cost final</small>
+          <div>Volum necesar: <strong><span id="pdf-liters">0.00</span> L</strong></div>
+        </div>
+        <div><span class="pdf-total" id="pdf-total">0.00</span> RON</div>
+      </div>
+
+      <p class="source-line">Document informativ, nu document fiscal. Preturile live provin din PretCarburant.ro API; verifica intotdeauna pretul afisat la pompa.</p>
+    </div>
+  </div>
+  <script src="./script.js" defer></script>
+</body>
+</html>

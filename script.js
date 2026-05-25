@@ -1,0 +1,822 @@
+const API = {
+      minime: "https://pretcarburant.ro/api/v1/preturi/minime",
+      orase: "https://pretcarburant.ro/api/v1/preturi"
+    };
+
+    const fuelMeta = {
+      motorina: {
+        label: "Motorina",
+        minimeKey: "motorina_standard",
+        cityKey: "motorina",
+        fallback: 9.60
+      },
+      benzina: {
+        label: "Benzina 95",
+        minimeKey: "benzina_standard",
+        cityKey: "benzina",
+        fallback: 9.36
+      },
+      gpl: {
+        label: "GPL",
+        minimeKey: "gpl",
+        cityKey: "gpl",
+        fallback: 4.40
+      }
+    };
+
+    const carDatabase = {
+      "Alfa Romeo": {
+        "159": {
+          "1.9 JTDm 150 CP": { f: "motorina", c: 6.0 },
+          "2.4 JTDm 200 CP": { f: "motorina", c: 6.8 },
+          "1.75 TBi 200 CP": { f: "benzina", c: 8.1 }
+        }
+      },
+      "Audi": {
+        "A3 (8P / 8V / 8Y)": {
+          "1.4 / 1.5 TFSI 125-150 CP": { f: "benzina", c: 5.6 },
+          "1.6 TDI 105-116 CP": { f: "motorina", c: 4.4 },
+          "2.0 TDI 140-184 CP": { f: "motorina", c: 4.9 }
+        },
+        "A4 (B7 / B8 / B9)": {
+          "1.8 / 2.0 TFSI 160-252 CP": { f: "benzina", c: 6.7 },
+          "2.0 TDI 140-190 CP": { f: "motorina", c: 5.2 },
+          "3.0 TDI V6 204-286 CP": { f: "motorina", c: 6.6 }
+        },
+        "Q5": {
+          "2.0 TFSI 211-252 CP": { f: "benzina", c: 8.2 },
+          "2.0 TDI 150-190 CP": { f: "motorina", c: 6.2 },
+          "3.0 TDI V6": { f: "motorina", c: 7.2 }
+        }
+      },
+      "BMW": {
+        "Seria 1 (E87 / F20 / F40)": {
+          "116i / 118i": { f: "benzina", c: 6.2 },
+          "116d / 118d": { f: "motorina", c: 4.5 },
+          "120d": { f: "motorina", c: 4.9 }
+        },
+        "Seria 3 (E46 / E90 / F30 / G20)": {
+          "320i / 330i": { f: "benzina", c: 6.9 },
+          "318d / 320d": { f: "motorina", c: 5.0 },
+          "330d": { f: "motorina", c: 5.8 }
+        },
+        "X3 / X5": {
+          "X3 20d / 30d": { f: "motorina", c: 6.7 },
+          "X5 30d / 40d": { f: "motorina", c: 7.8 },
+          "X5 40i benzina": { f: "benzina", c: 9.5 }
+        }
+      },
+      "Citroen": {
+        "C3 (Generatia a 2-a / Zenith)": {
+          "1.2 PureTech 82 CP": { f: "benzina", c: 4.7 },
+          "1.4 HDi 70 CP": { f: "motorina", c: 3.8 }
+        },
+        "C3 / C4 (Alte modele)": {
+          "1.2 PureTech 82-130 CP": { f: "benzina", c: 5.5 },
+          "1.5 / 1.6 BlueHDi": { f: "motorina", c: 4.4 }
+        },
+        "C5 / C5 Aircross": {
+          "1.2 / 1.6 PureTech": { f: "benzina", c: 6.5 },
+          "1.5 / 2.0 BlueHDi": { f: "motorina", c: 5.5 }
+        }
+      },
+      "Dacia": {
+        "Logan": {
+          "1.0 SCe / 1.2 16V": { f: "benzina", c: 5.6 },
+          "0.9 / 1.0 TCe": { f: "benzina", c: 5.3 },
+          "1.0 ECO-G GPL": { f: "gpl", c: 7.1 },
+          "1.5 dCi": { f: "motorina", c: 4.2 }
+        },
+        "Sandero / Stepway": {
+          "1.0 TCe 90-110 CP": { f: "benzina", c: 5.5 },
+          "1.0 ECO-G GPL": { f: "gpl", c: 7.3 },
+          "1.5 dCi": { f: "motorina", c: 4.0 }
+        },
+        "Duster": {
+          "1.0 ECO-G GPL": { f: "gpl", c: 7.8 },
+          "1.3 TCe 130-150 CP": { f: "benzina", c: 6.5 },
+          "1.5 dCi / Blue dCi": { f: "motorina", c: 5.1 },
+          "Hybrid 140": { f: "benzina", c: 5.0 }
+        },
+        "Jogger": {
+          "1.0 TCe 110 CP": { f: "benzina", c: 5.8 },
+          "1.0 ECO-G GPL": { f: "gpl", c: 7.8 },
+          "Hybrid 140": { f: "benzina", c: 4.9 }
+        }
+      },
+      "Ford": {
+        "Fiesta / Focus": {
+          "1.0 EcoBoost": { f: "benzina", c: 5.3 },
+          "1.5 EcoBoost": { f: "benzina", c: 6.2 },
+          "1.5 / 1.6 TDCi": { f: "motorina", c: 4.6 },
+          "2.0 TDCi / EcoBlue": { f: "motorina", c: 5.2 }
+        },
+        "Puma / Kuga": {
+          "Puma 1.0 EcoBoost MHEV": { f: "benzina", c: 5.8 },
+          "Kuga 1.5 EcoBoost": { f: "benzina", c: 7.0 },
+          "Kuga 2.0 TDCi": { f: "motorina", c: 6.2 }
+        }
+      },
+      "Volkswagen": {
+        "Golf / Polo": {
+          "1.0 / 1.2 / 1.5 TSI": { f: "benzina", c: 5.5 },
+          "1.6 TDI": { f: "motorina", c: 4.4 },
+          "2.0 TDI": { f: "motorina", c: 4.9 }
+        },
+        "Passat": {
+          "1.5 / 2.0 TSI": { f: "benzina", c: 6.7 },
+          "1.6 / 2.0 TDI": { f: "motorina", c: 5.2 },
+          "2.0 BiTDI": { f: "motorina", c: 6.5 }
+        },
+        "Tiguan / Touareg": {
+          "1.5 / 2.0 TSI": { f: "benzina", c: 7.8 },
+          "2.0 TDI": { f: "motorina", c: 6.5 },
+          "3.0 TDI V6": { f: "motorina", c: 8.4 }
+        }
+      }
+    };
+
+    const els = {};
+    const state = {
+      fuel: "motorina",
+      route: "mixt",
+      roundTrip: false,
+      ac: false,
+      passengers: 1,
+      priceMode: "live",
+      area: "national",
+      apiDate: null,
+      nationalPrices: null,
+      cityPrices: [],
+      carName: "Nespecificata",
+      lastResult: null
+    };
+
+    function byId(id) {
+      return document.getElementById(id);
+    }
+
+    function cacheElements() {
+      [
+        "brand", "model", "engine", "base-consumption", "fuel-price", "price-area",
+        "price-source-mode", "api-status", "api-meta", "price-note", "price-message",
+        "distance", "roundtrip-btn", "ac-btn", "passengers", "pass-minus", "pass-plus",
+        "total-cost", "summary-subtitle", "summary-car", "summary-distance",
+        "summary-real-cons", "summary-liters", "summary-source", "open-receipt-btn",
+        "receipt-btn", "receipt-modal", "close-receipt-btn", "download-pdf-btn",
+        "local-updated", "card-motorina", "card-benzina", "card-gpl",
+        "hero-refresh-btn", "refresh-prices-btn"
+      ].forEach((id) => {
+        els[id] = byId(id);
+      });
+    }
+
+    function formatNumber(value, decimals = 2) {
+      const number = Number(value);
+      if (!Number.isFinite(number)) return (0).toFixed(decimals);
+      return number.toFixed(decimals);
+    }
+
+    function formatPrice(value) {
+      return formatNumber(value, 2);
+    }
+
+    function readNumber(input) {
+      const value = Number.parseFloat(String(input.value).replace(",", "."));
+      return Number.isFinite(value) && value > 0 ? value : 0;
+    }
+
+    function setMessage(type, icon, text) {
+      els["price-message"].className = `message ${type || ""}`.trim();
+      els["price-message"].innerHTML = `<i class="${icon}"></i> ${text}`;
+    }
+
+    function setApiStatus(type, html) {
+      els["api-status"].className = `status-pill ${type || ""}`.trim();
+      els["api-status"].innerHTML = html;
+    }
+
+    function populateCars() {
+      Object.keys(carDatabase).sort((a, b) => a.localeCompare(b, "ro")).forEach((brand) => {
+        els.brand.add(new Option(brand, brand));
+      });
+    }
+
+    function populateModels() {
+      const brand = els.brand.value;
+      els.model.innerHTML = '<option value="">Selecteaza modelul</option>';
+      els.engine.innerHTML = '<option value="">Alege motorizarea</option>';
+      els.model.disabled = !brand;
+      els.engine.disabled = true;
+      state.carName = "Nespecificata";
+
+      if (brand) {
+        Object.keys(carDatabase[brand]).sort((a, b) => a.localeCompare(b, "ro")).forEach((model) => {
+          els.model.add(new Option(model, model));
+        });
+      }
+
+      updateAll();
+    }
+
+    function populateEngines() {
+      const brand = els.brand.value;
+      const model = els.model.value;
+      els.engine.innerHTML = '<option value="">Alege motorizarea</option>';
+      els.engine.disabled = !(brand && model);
+      state.carName = brand && model ? `${brand} ${model}` : "Nespecificata";
+
+      if (brand && model) {
+        Object.keys(carDatabase[brand][model]).sort((a, b) => a.localeCompare(b, "ro")).forEach((engine) => {
+          els.engine.add(new Option(engine, engine));
+        });
+      }
+
+      updateAll();
+    }
+
+    function applyEngine() {
+      const brand = els.brand.value;
+      const model = els.model.value;
+      const engine = els.engine.value;
+
+      if (brand && model && engine) {
+        const data = carDatabase[brand][model][engine];
+        els["base-consumption"].value = data.c;
+        state.carName = `${brand} ${model} - ${engine}`;
+        setFuelType(data.f, { keepLive: true });
+      } else {
+        state.carName = brand && model ? `${brand} ${model}` : "Nespecificata";
+        updateAll();
+      }
+    }
+
+    function setFuelType(type, options = {}) {
+      state.fuel = type;
+      document.querySelectorAll("[data-fuel]").forEach((button) => {
+        const active = button.dataset.fuel === type;
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-pressed", String(active));
+      });
+
+      if (options.keepLive !== false && state.priceMode === "live") {
+        applyLivePrice();
+      } else {
+        updateAll();
+      }
+    }
+
+    function setRoute(route) {
+      state.route = route;
+      document.querySelectorAll("[data-route]").forEach((button) => {
+        const active = button.dataset.route === route;
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-pressed", String(active));
+      });
+      updateAll();
+    }
+
+    function toggleRoundTrip() {
+      state.roundTrip = !state.roundTrip;
+      els["roundtrip-btn"].classList.toggle("active", state.roundTrip);
+      els["roundtrip-btn"].setAttribute("aria-pressed", String(state.roundTrip));
+      els["roundtrip-btn"].innerHTML = state.roundTrip
+        ? '<i class="fa-solid fa-check"></i><span>Dus-intors activ</span>'
+        : '<i class="fa-solid fa-arrow-right-arrow-left"></i><span>Dus-intors oprit</span>';
+      updateAll();
+    }
+
+    function toggleAc() {
+      state.ac = !state.ac;
+      els["ac-btn"].classList.toggle("active", state.ac);
+      els["ac-btn"].setAttribute("aria-pressed", String(state.ac));
+      els["ac-btn"].innerHTML = state.ac
+        ? '<i class="fa-solid fa-snowflake"></i><span>AC pornit</span>'
+        : '<i class="fa-solid fa-snowflake"></i><span>AC oprit</span>';
+      updateAll();
+    }
+
+    function changePassengers(delta) {
+      state.passengers = Math.min(9, Math.max(1, state.passengers + delta));
+      els.passengers.textContent = state.passengers;
+      updateAll();
+    }
+
+    function getNationalPrice(type = state.fuel) {
+      const meta = fuelMeta[type];
+      return state.nationalPrices?.[meta.minimeKey]?.mediu ?? meta.fallback;
+    }
+
+    function getSelectedCity() {
+      if (state.area === "national") return null;
+      return state.cityPrices.find((item) => item.slug === state.area) || null;
+    }
+
+    function getLivePrice(type = state.fuel) {
+      const meta = fuelMeta[type];
+      const city = getSelectedCity();
+      if (city && Number.isFinite(Number(city[meta.cityKey]))) {
+        return Number(city[meta.cityKey]);
+      }
+      return getNationalPrice(type);
+    }
+
+    function getPriceSourceLabel() {
+      if (state.priceMode === "manual") return "Manual";
+      const city = getSelectedCity();
+      return city ? `Live API - ${city.oras}` : "Live API - medie nationala";
+    }
+
+    function applyLivePrice() {
+      if (state.priceMode !== "live") {
+        updateAll();
+        return;
+      }
+
+      const price = getLivePrice();
+      els["fuel-price"].value = formatPrice(price);
+      const city = getSelectedCity();
+      const areaText = city ? city.oras : "media nationala";
+      els["price-note"].textContent = `${fuelMeta[state.fuel].label}: ${formatPrice(price)} Lei/L, ${areaText}.`;
+      setMessage("success", "fa-solid fa-circle-check", `Pret aplicat automat pentru ${areaText}.`);
+      updateAll();
+    }
+
+    function updatePriceMode() {
+      state.priceMode = els["price-source-mode"].value;
+      if (state.priceMode === "live") {
+        applyLivePrice();
+      } else {
+        els["price-note"].textContent = "Mod manual: pretul introdus de tine ramane folosit in calcul.";
+        setMessage("warn", "fa-solid fa-pen", "Pretul live este oprit pentru acest calcul.");
+        updateAll();
+      }
+    }
+
+    function updateArea() {
+      state.area = els["price-area"].value;
+      if (state.priceMode === "live") {
+        applyLivePrice();
+      } else {
+        updateAll();
+      }
+    }
+
+    function manualPriceEdited() {
+      if (state.priceMode !== "manual") {
+        state.priceMode = "manual";
+        els["price-source-mode"].value = "manual";
+        els["price-note"].textContent = "Pret schimbat manual. Poti reveni la Live API din selector.";
+        setMessage("warn", "fa-solid fa-pen", "Ai trecut pe pret manual.");
+      }
+      updateAll();
+    }
+
+    async function fetchJson(url) {
+      const response = await fetch(`${url}${url.includes("?") ? "&" : "?"}_=${Date.now()}`, {
+        headers: { "Accept": "application/json" }
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return response.json();
+    }
+
+    async function loadPrices() {
+      setApiStatus("", '<i class="fa-solid fa-circle-notch fa-spin"></i> Se incarca');
+      els["api-meta"].textContent = "Sincronizare cu API-ul de preturi...";
+      setMessage("", "fa-solid fa-satellite-dish", "Se actualizeaza preturile live.");
+
+      try {
+        const [national, cities] = await Promise.all([
+          fetchJson(API.minime),
+          fetchJson(API.orase)
+        ]);
+
+        if (national.status !== "ok" || !national.preturi) {
+          throw new Error("Raspuns invalid pentru preturile nationale");
+        }
+
+        state.apiDate = national.data || cities.data || null;
+        state.nationalPrices = national.preturi;
+        state.cityPrices = Array.isArray(cities.rezultate) ? cities.rezultate : [];
+
+        populateAreas();
+        renderLiveCards();
+        setApiStatus("", '<i class="fa-solid fa-signal"></i> Live');
+        els["api-meta"].textContent = `Date API pentru ${state.apiDate || "azi"}; endpoint-urile publice au cache de 5 minute.`;
+        els["local-updated"].textContent = new Date().toLocaleString("ro-RO", { dateStyle: "medium", timeStyle: "short" });
+
+        if (state.priceMode === "live") {
+          applyLivePrice();
+        } else {
+          updateAll();
+        }
+      } catch (error) {
+        console.warn("Nu s-au putut incarca preturile live:", error);
+        state.nationalPrices = {
+          motorina_standard: { mediu: fuelMeta.motorina.fallback },
+          benzina_standard: { mediu: fuelMeta.benzina.fallback },
+          gpl: { mediu: fuelMeta.gpl.fallback }
+        };
+        state.cityPrices = [];
+        populateAreas();
+        renderLiveCards();
+        setApiStatus("error", '<i class="fa-solid fa-triangle-exclamation"></i> Fallback');
+        els["api-meta"].textContent = "API indisponibil temporar; se folosesc ultimele valori fallback din aplicatie.";
+        setMessage("error", "fa-solid fa-triangle-exclamation", "Nu am putut incarca preturile live. Calculul ramane functional.");
+        if (state.priceMode === "live") applyLivePrice();
+      }
+    }
+
+    function populateAreas() {
+      const selected = state.area;
+      els["price-area"].innerHTML = '<option value="national">Medie nationala</option>';
+      state.cityPrices
+        .slice()
+        .sort((a, b) => String(a.oras).localeCompare(String(b.oras), "ro"))
+        .forEach((city) => {
+          els["price-area"].add(new Option(`${city.oras} (${city.judet})`, city.slug));
+        });
+      els["price-area"].value = [...els["price-area"].options].some((option) => option.value === selected)
+        ? selected
+        : "national";
+      state.area = els["price-area"].value;
+    }
+
+    function renderLiveCards() {
+      const motorina = getNationalPrice("motorina");
+      const benzina = getNationalPrice("benzina");
+      const gpl = getNationalPrice("gpl");
+
+      els["card-motorina"].textContent = formatPrice(motorina);
+      els["card-benzina"].textContent = formatPrice(benzina);
+      els["card-gpl"].textContent = formatPrice(gpl);
+    }
+
+    function calculate() {
+      const distance = readNumber(els.distance);
+      const baseConsumption = readNumber(els["base-consumption"]);
+      const fuelPrice = readNumber(els["fuel-price"]);
+      const realDistance = state.roundTrip ? distance * 2 : distance;
+
+      const routeFactor = state.route === "urban" ? 1.2 : state.route === "extra" ? 0.9 : 1;
+      const acFactor = state.ac ? 1.05 : 1;
+      const passengerAdd = Math.max(0, state.passengers - 1) * 0.1;
+      const realConsumption = baseConsumption > 0 ? (baseConsumption * routeFactor * acFactor) + passengerAdd : 0;
+      const liters = realDistance > 0 && realConsumption > 0 ? (realDistance / 100) * realConsumption : 0;
+      const total = liters * fuelPrice;
+
+      const routeLabel = state.route === "urban" ? "Oras (+20%)" : state.route === "extra" ? "Extern (-10%)" : "Mixt";
+      const routeAdjust = state.route === "urban" ? "+20%" : state.route === "extra" ? "-10%" : "0%";
+      const source = getPriceSourceLabel();
+
+      state.lastResult = {
+        distance,
+        realDistance,
+        baseConsumption,
+        fuelPrice,
+        routeFactor,
+        acFactor,
+        passengerAdd,
+        realConsumption,
+        liters,
+        total,
+        routeLabel,
+        routeAdjust,
+        source
+      };
+
+      return state.lastResult;
+    }
+
+    function updateAll() {
+      const result = calculate();
+      const car = state.carName || "Nespecificata";
+      const fuelLabel = fuelMeta[state.fuel].label;
+
+      els["total-cost"].textContent = formatPrice(result.total);
+      els["summary-subtitle"].textContent = result.total > 0
+        ? `${formatPrice(result.liters)} L x ${formatPrice(result.fuelPrice)} Lei/L`
+        : "Completeaza distanta si consumul.";
+      els["summary-car"].textContent = car;
+      els["summary-distance"].textContent = formatNumber(result.realDistance, result.realDistance % 1 === 0 ? 0 : 1);
+      els["summary-real-cons"].textContent = formatNumber(result.realConsumption, 1);
+      els["summary-liters"].textContent = formatNumber(result.liters, 2);
+      els["summary-source"].textContent = result.source;
+
+      updateReceipt(result, car, fuelLabel);
+      updatePdf(result, car, fuelLabel);
+    }
+
+    function updateReceipt(result, car, fuelLabel) {
+      const fields = {
+        "r-car": car,
+        "r-distance": formatNumber(result.realDistance, result.realDistance % 1 === 0 ? 0 : 1),
+        "r-base": formatNumber(result.baseConsumption, 1),
+        "r-route": result.routeLabel,
+        "r-ac": state.ac ? "Pornit (+5%)" : "Oprit",
+        "r-pass": `+${formatNumber(result.passengerAdd, 1)}`,
+        "r-real": formatNumber(result.realConsumption, 1),
+        "r-liters": formatNumber(result.liters, 2),
+        "r-price": formatNumber(result.fuelPrice, 2),
+        "r-source": result.source,
+        "r-formula": `${formatNumber(result.liters, 2)} L x ${formatNumber(result.fuelPrice, 2)} Lei`,
+        "r-total": formatNumber(result.total, 2)
+      };
+
+      Object.entries(fields).forEach(([id, value]) => {
+        byId(id).textContent = value;
+      });
+    }
+
+    function updatePdf(result, car, fuelLabel) {
+      const fields = {
+        "pdf-car": car,
+        "pdf-base": formatNumber(result.baseConsumption, 1),
+        "pdf-fuel": fuelLabel,
+        "pdf-distance": formatNumber(result.realDistance, result.realDistance % 1 === 0 ? 0 : 1),
+        "pdf-price": formatNumber(result.fuelPrice, 2),
+        "pdf-source": result.source,
+        "pdf-t-base": formatNumber(result.baseConsumption, 1),
+        "pdf-t-route": result.routeAdjust,
+        "pdf-t-ac": state.ac ? "+5%" : "0%",
+        "pdf-t-pass": `+${formatNumber(result.passengerAdd, 1)}`,
+        "pdf-t-real": formatNumber(result.realConsumption, 1),
+        "pdf-liters": formatNumber(result.liters, 2),
+        "pdf-total": formatNumber(result.total, 2)
+      };
+
+      Object.entries(fields).forEach(([id, value]) => {
+        byId(id).textContent = value;
+      });
+    }
+
+    function openReceipt() {
+      updateAll();
+      els["receipt-modal"].classList.add("open");
+      els["close-receipt-btn"].focus();
+    }
+
+    function closeReceipt() {
+      els["receipt-modal"].classList.remove("open");
+    }
+
+
+    async function imageUrlToDataUrl(url) {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`Imagine indisponibila: ${url}`);
+      const blob = await response.blob();
+      return await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    function isIOSDevice() {
+      return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    }
+
+    function savePdfBlob(blob, filename) {
+      const blobUrl = URL.createObjectURL(blob);
+      if (isIOSDevice()) {
+        const opened = window.open(blobUrl, "_blank");
+        if (!opened) {
+          alert("PDF-ul a fost generat, dar browserul a blocat fereastra. Permite pop-up pentru site si incearca din nou.");
+        }
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
+        return;
+      }
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+    }
+
+    async function generatePDF() {
+      updateAll();
+
+      const button = els["download-pdf-btn"];
+      const previous = button.innerHTML;
+
+      button.disabled = true;
+      button.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Se genereaza PDF';
+
+      try {
+        const JsPdfCtor = window.jspdf && window.jspdf.jsPDF;
+        if (!JsPdfCtor) {
+          throw new Error("Biblioteca jsPDF nu s-a incarcat corect.");
+        }
+
+        const result = state.lastResult || calculate();
+        const car = state.carName || "Nespecificata";
+        const fuelLabel = fuelMeta[state.fuel].label;
+        const doc = new JsPdfCtor({ unit: "mm", format: "a4", orientation: "portrait" });
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const margin = 15;
+        const contentWidth = pageWidth - margin * 2;
+        let y = 18;
+
+        const split = (value, width) => doc.splitTextToSize(String(value), width);
+        const line = (x1, y1, x2, y2, color = [220, 228, 226]) => {
+          doc.setDrawColor(...color);
+          doc.line(x1, y1, x2, y2);
+        };
+        const textBlock = (value, x, yPos, width, fontSize = 10.5, color = [17, 24, 39], weight = "normal", lineHeight = 4.6) => {
+          doc.setFont("helvetica", weight);
+          doc.setFontSize(fontSize);
+          doc.setTextColor(...color);
+          const lines = split(value, width);
+          doc.text(lines, x, yPos);
+          return lines.length * lineHeight;
+        };
+        const infoCard = (title, lines, x, yPos, width, minHeight = 36) => {
+          let cursor = yPos + 8;
+          doc.setFillColor(246, 248, 247);
+          doc.setDrawColor(220, 228, 226);
+          doc.roundedRect(x, yPos, width, minHeight, 4, 4, "FD");
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(10);
+          doc.setTextColor(15, 118, 110);
+          doc.text(title.toUpperCase(), x + 6, cursor);
+          cursor += 5;
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(12);
+          doc.setTextColor(17, 24, 39);
+          const first = split(lines[0], width - 12);
+          doc.text(first, x + 6, cursor);
+          cursor += first.length * 4.8 + 1;
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(10.5);
+          doc.setTextColor(71, 85, 105);
+          for (const item of lines.slice(1)) {
+            const rows = split(item, width - 12);
+            doc.text(rows, x + 6, cursor);
+            cursor += rows.length * 4.4 + 1;
+          }
+          return Math.max(minHeight, cursor - yPos + 3);
+        };
+
+        doc.setFillColor(255, 255, 255);
+        doc.rect(0, 0, pageWidth, doc.internal.pageSize.getHeight(), "F");
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(24);
+        doc.setTextColor(17, 24, 39);
+        doc.text("Deviz cost combustibil", margin, y);
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10.5);
+        doc.setTextColor(100, 116, 139);
+        doc.text("Generat de Cost Combustibil Live", margin, y + 6.5);
+
+        try {
+          const logoDataUrl = await imageUrlToDataUrl("./assets/logo.png");
+          doc.addImage(logoDataUrl, "PNG", pageWidth - 30, 11, 17, 17);
+        } catch (logoError) {
+          console.warn("Logo PDF indisponibil:", logoError);
+          doc.setFillColor(229, 243, 239);
+          doc.setDrawColor(15, 118, 110);
+          doc.roundedRect(pageWidth - 28, 12, 13, 13, 3, 3, "FD");
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(12);
+          doc.setTextColor(15, 118, 110);
+          doc.text("C", pageWidth - 21.5, 20.7, { align: "center" });
+        }
+
+        line(margin, 30, pageWidth - margin, 30, [15, 118, 110]);
+        y = 38;
+
+        const leftX = margin;
+        const rightX = margin + (contentWidth / 2) + 4;
+        const boxWidth = (contentWidth / 2) - 4;
+        const leftHeight = infoCard("Autoturism", [car, `Consum baza: ${formatNumber(result.baseConsumption, 1)} L/100km`, `Combustibil: ${fuelLabel}`], leftX, y, boxWidth, 38);
+        const rightHeight = infoCard("Calatorie", [`Distanta: ${formatNumber(result.realDistance, result.realDistance % 1 === 0 ? 0 : 1)} km`, `Pret: ${formatNumber(result.fuelPrice, 2)} Lei/L`, `Sursa pret: ${result.source}`], rightX, y, boxWidth, 38);
+        y += Math.max(leftHeight, rightHeight) + 12;
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(13.5);
+        doc.setTextColor(17, 24, 39);
+        doc.text("Calcul consum", margin, y);
+        y += 5;
+
+        const rows = [
+          ["Consum baza", `${formatNumber(result.baseConsumption, 1)} L/100km`],
+          ["Ajustare traseu", result.routeAdjust],
+          ["Ajustare AC", state.ac ? "+5%" : "0%"],
+          ["Ajustare pasageri", `+${formatNumber(result.passengerAdd, 1)} L/100km`],
+          ["Consum real estimat", `${formatNumber(result.realConsumption, 1)} L/100km`],
+          ["Volum combustibil", `${formatNumber(result.liters, 2)} L`],
+          ["Formula", `${formatNumber(result.liters, 2)} L x ${formatNumber(result.fuelPrice, 2)} Lei/L`]
+        ];
+
+        y += 3;
+        rows.forEach(([label, value], index) => {
+          const highlight = label === "Consum real estimat";
+          if (highlight) {
+            doc.setFillColor(229, 243, 239);
+            doc.roundedRect(margin, y - 5, contentWidth, 10, 2.5, 2.5, "F");
+          }
+          doc.setFont("helvetica", highlight ? "bold" : "normal");
+          doc.setFontSize(10.8);
+          doc.setTextColor(...(highlight ? [15, 78, 71] : [71, 85, 105]));
+          doc.text(label, margin + 1, y + 1.5);
+          doc.setFont("helvetica", "bold");
+          doc.setTextColor(...(highlight ? [15, 78, 71] : [17, 24, 39]));
+          doc.text(String(value), pageWidth - margin - 1, y + 1.5, { align: "right" });
+          y += 8.6;
+          if (!highlight && index < rows.length - 1) {
+            line(margin, y - 2.8, pageWidth - margin, y - 2.8);
+          }
+        });
+
+        y += 4;
+        doc.setFillColor(17, 24, 39);
+        doc.roundedRect(margin, y, contentWidth, 30, 4, 4, "F");
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9.5);
+        doc.setTextColor(148, 163, 184);
+        doc.text("Cost final", margin + 8, y + 8);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10.5);
+        doc.setTextColor(255, 255, 255);
+        doc.text(`Volum necesar: ${formatNumber(result.liters, 2)} L`, margin + 8, y + 16);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(24);
+        doc.text(`${formatNumber(result.total, 2)} RON`, pageWidth - margin - 8, y + 18, { align: "right" });
+
+        y += 38;
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8.8);
+        doc.setTextColor(148, 163, 184);
+        const footer = "Document informativ, nu document fiscal. Verifica intotdeauna pretul afisat la pompa.";
+        doc.text(split(footer, contentWidth), pageWidth / 2, y, { align: "center" });
+
+        const blob = doc.output("blob");
+        savePdfBlob(blob, "Deviz_Cost_Combustibil.pdf");
+      } catch (error) {
+        console.error("PDF error:", error);
+        alert("PDF-ul nu s-a putut genera corect. Reincarca pagina si incearca din nou.");
+      } finally {
+        button.disabled = false;
+        button.innerHTML = previous;
+      }
+    }
+
+    function bindEvents() {
+      els.brand.addEventListener("change", populateModels);
+      els.model.addEventListener("change", populateEngines);
+      els.engine.addEventListener("change", applyEngine);
+      els["base-consumption"].addEventListener("input", updateAll);
+      els.distance.addEventListener("input", updateAll);
+      els["fuel-price"].addEventListener("input", manualPriceEdited);
+      els["price-area"].addEventListener("change", updateArea);
+      els["price-source-mode"].addEventListener("change", updatePriceMode);
+      els["roundtrip-btn"].addEventListener("click", toggleRoundTrip);
+      els["ac-btn"].addEventListener("click", toggleAc);
+      els["pass-minus"].addEventListener("click", () => changePassengers(-1));
+      els["pass-plus"].addEventListener("click", () => changePassengers(1));
+      els["receipt-btn"].addEventListener("click", openReceipt);
+      els["open-receipt-btn"].addEventListener("click", openReceipt);
+      els["close-receipt-btn"].addEventListener("click", closeReceipt);
+      els["download-pdf-btn"].addEventListener("click", generatePDF);
+      els["refresh-prices-btn"].addEventListener("click", loadPrices);
+      els["hero-refresh-btn"].addEventListener("click", loadPrices);
+
+      document.querySelectorAll("[data-fuel]").forEach((button) => {
+        button.addEventListener("click", () => setFuelType(button.dataset.fuel));
+      });
+
+      document.querySelectorAll("[data-route]").forEach((button) => {
+        button.addEventListener("click", () => setRoute(button.dataset.route));
+      });
+
+      els["receipt-modal"].addEventListener("click", (event) => {
+        if (event.target === els["receipt-modal"]) closeReceipt();
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && els["receipt-modal"].classList.contains("open")) {
+          closeReceipt();
+        }
+      });
+    }
+
+    function init() {
+      cacheElements();
+      populateCars();
+      bindEvents();
+      els["price-source-mode"].value = state.priceMode;
+      els["price-area"].value = state.area;
+      els["fuel-price"].value = formatPrice(fuelMeta.motorina.fallback);
+      els["local-updated"].textContent = new Date().toLocaleString("ro-RO", { dateStyle: "medium", timeStyle: "short" });
+      setRoute(state.route);
+      setFuelType(state.fuel, { keepLive: false });
+      loadPrices();
+      updateAll();
+    }
+
+    document.addEventListener("DOMContentLoaded", init);
