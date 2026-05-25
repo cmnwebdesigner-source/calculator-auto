@@ -1,11 +1,9 @@
-<!DOCTYPE html>
+\<!DOCTYPE html>
 <html lang="ro">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Calculator premium pentru costul combustibilului, cu preturi live la benzina, motorina si GPL in Romania.">
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6433344106395422"
-     crossorigin="anonymous"></script>
   <title>Cost Combustibil Live</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230f766e'/%3E%3Cpath d='M22 12h16a6 6 0 0 1 6 6v34H18V18a6 6 0 0 1 6-6Z' fill='white'/%3E%3Crect x='24' y='18' width='14' height='12' rx='2' fill='%23111827'/%3E%3Cpath d='M44 24h4l4 6v16a4 4 0 0 1-8 0V24Z' fill='white'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,6 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
   <style>
     :root {
       --bg: #f6f8f7;
@@ -215,8 +214,7 @@
     .live-strip,
     .panel,
     .summary-panel,
-    .terms-panel,
-    .ad-slot {
+    .terms-panel {
       border: 1px solid rgba(255, 255, 255, .8);
       background: rgba(255, 255, 255, .86);
       border-radius: var(--radius);
@@ -241,10 +239,10 @@
     }
 
     h1 {
-      margin: 0;
+      margin: 0 0 14px 0;
       max-width: 680px;
       font-size: clamp(2rem, 4.1vw, 4.25rem);
-      line-height: 1.02;
+      line-height: 1.15;
       letter-spacing: -.045em;
       font-weight: 800;
       text-wrap: balance;
@@ -300,113 +298,255 @@
       box-shadow: var(--shadow-soft);
     }
 
-    .station-visual {
+    /* HERO: traseu simplu cu masinuta */
+    .premium-visual {
       position: relative;
       min-height: 214px;
+      display: grid;
+      align-items: center;
+      padding: 18px;
+      overflow: hidden;
       background:
-        linear-gradient(135deg, rgba(17, 24, 39, .96), rgba(15, 118, 110, .84)),
-        radial-gradient(circle at 20% 20%, rgba(245, 158, 11, .5), transparent 34%);
+        radial-gradient(circle at 16% 18%, rgba(56, 189, 248, .18), transparent 32%),
+        radial-gradient(circle at 84% 82%, rgba(14, 165, 233, .14), transparent 34%),
+        linear-gradient(135deg, #091425 0%, #0c3256 52%, #0f172a 100%);
+    }
+
+    .premium-visual::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
+      background-size: 24px 24px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .premium-visual::after {
+      content: "";
+      position: absolute;
+      right: -70px;
+      bottom: -70px;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: rgba(59, 130, 246, .12);
+      filter: blur(20px);
+      z-index: 0;
+    }
+
+    .route-visual-card {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      gap: 16px;
+      width: 100%;
+      padding: 16px;
+      border-radius: 24px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(2, 6, 23, .32);
+      box-shadow: 0 22px 48px rgba(2, 6, 23, .3);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    .route-visual-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .route-visual-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 26px;
+      padding: 0 10px;
+      border-radius: 999px;
+      color: #bae6fd;
+      background: rgba(14, 165, 233, .16);
+      border: 1px solid rgba(186, 230, 253, .18);
+      font-size: 10px;
+      font-weight: 850;
+      text-transform: uppercase;
+      letter-spacing: .09em;
+    }
+
+    .route-visual-title {
+      margin: 9px 0 0;
+      color: #ffffff;
+      font-size: clamp(1.08rem, 1.8vw, 1.4rem);
+      line-height: 1.06;
+      letter-spacing: -.04em;
+      font-weight: 900;
+      max-width: 320px;
+    }
+
+    .route-visual-text {
+      margin: 7px 0 0;
+      color: rgba(226, 232, 240, .72);
+      font-size: 12px;
+      line-height: 1.45;
+      font-weight: 650;
+      max-width: 330px;
+    }
+
+    .route-visual-icon {
+      width: 52px;
+      height: 52px;
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      border-radius: 18px;
+      color: #e0f2fe;
+      background: linear-gradient(135deg, rgba(255,255,255,.18), rgba(255,255,255,.08));
+      border: 1px solid rgba(255,255,255,.16);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 12px 28px rgba(2,6,23,.28);
+      font-size: 20px;
+    }
+
+    .route-stage {
+      position: relative;
+      min-height: 122px;
+      border-radius: 20px;
+      padding: 14px 14px 18px;
+      background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04));
+      border: 1px solid rgba(255,255,255,.08);
       overflow: hidden;
     }
 
-    .station-visual::before {
+    .route-stage::before {
       content: "";
       position: absolute;
-      inset: 18px;
-      border: 1px solid rgba(255, 255, 255, .15);
-      border-radius: var(--radius);
+      left: 10%;
+      right: 10%;
+      top: 50%;
+      height: 4px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(255,255,255,.18), rgba(255,255,255,.45), rgba(255,255,255,.18));
+      transform: translateY(-50%);
     }
 
-    .station-visual::after {
+    .route-stage::after {
       content: "";
       position: absolute;
-      right: -30px;
-      bottom: 22px;
-      width: 310px;
-      height: 72px;
-      border-radius: 999px;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .22), transparent);
-      transform: rotate(-8deg);
+      left: 12%;
+      top: calc(50% - 1px);
+      width: 76%;
+      height: 0;
+      border-top: 3px dashed rgba(125, 211, 252, .95);
+      transform: translateY(-50%);
+      opacity: .95;
     }
 
-    .pump-graphic {
+    .route-node {
       position: absolute;
-      left: 28px;
-      top: 26px;
-      width: 118px;
-      height: 154px;
-      border: 1px solid rgba(255, 255, 255, .22);
-      border-radius: var(--radius);
-      background: rgba(255, 255, 255, .08);
-      box-shadow: 0 28px 60px rgba(0, 0, 0, .22);
+      top: 50%;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 3px solid rgba(255,255,255,.95);
+      background: #22c55e;
+      box-shadow: 0 0 0 6px rgba(34,197,94,.14);
+      transform: translateY(-50%);
+      z-index: 2;
     }
 
-    .pump-graphic i {
+    .route-node.start {
+      left: 10%;
+      background: #38bdf8;
+      box-shadow: 0 0 0 6px rgba(56,189,248,.14);
+    }
+
+    .route-node.end {
+      right: 10%;
+      background: #22c55e;
+    }
+
+    .route-car {
       position: absolute;
-      left: 18px;
-      top: 18px;
-      color: #fff;
-      font-size: 34px;
-    }
-
-    .pump-screen {
-      position: absolute;
-      left: 18px;
-      right: 18px;
-      top: 66px;
-      height: 48px;
-      display: grid;
-      place-items: center;
-      border-radius: var(--radius-sm);
-      background: rgba(255, 255, 255, .94);
-      color: #111827;
-      font-size: 22px;
-      font-weight: 800;
-      letter-spacing: -.05em;
-    }
-
-    .pump-base {
-      position: absolute;
-      left: 18px;
-      right: 18px;
-      bottom: 16px;
-      height: 14px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, .26);
-    }
-
-    .price-stack {
-      position: absolute;
-      right: 24px;
-      top: 24px;
-      display: grid;
-      width: 168px;
-      gap: 8px;
-    }
-
-    .price-mini {
-      display: flex;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -58%);
+      min-width: 52px;
+      height: 36px;
+      padding: 0 12px;
+      display: inline-flex;
       align-items: center;
+      justify-content: center;
+      gap: 7px;
+      border-radius: 999px;
+      color: #ffffff;
+      background: linear-gradient(135deg, #38bdf8, #2563eb);
+      box-shadow: 0 14px 28px rgba(37,99,235,.35);
+      border: 1px solid rgba(255,255,255,.24);
+      font-size: 14px;
+      z-index: 3;
+    }
+
+    .route-car small {
+      color: rgba(255,255,255,.88);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .route-points {
+      position: absolute;
+      inset: 16px 16px auto 16px;
+      display: flex;
       justify-content: space-between;
-      gap: 12px;
-      padding: 10px 12px;
-      border: 1px solid rgba(255, 255, 255, .18);
-      border-radius: var(--radius);
-      color: #fff;
-      background: rgba(255, 255, 255, .09);
-      backdrop-filter: blur(10px);
-    }
-
-    .price-mini span {
+      gap: 10px;
+      color: rgba(226,232,240,.76);
       font-size: 11px;
-      font-weight: 800;
-      color: rgba(255, 255, 255, .72);
+      font-weight: 750;
+      z-index: 2;
     }
 
-    .price-mini strong {
-      font-size: 18px;
+    .route-points span:last-child {
+      text-align: right;
+    }
+
+    .route-info-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .route-info-card {
+      min-width: 0;
+      padding: 11px 12px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.08);
+      display: grid;
+      gap: 6px;
+    }
+
+    .route-info-card span {
+      color: rgba(226,232,240,.72);
+      font-size: 10px;
       font-weight: 800;
-      letter-spacing: -.04em;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    .route-info-card strong {
+      color: #fff;
+      font-size: 14px;
+      line-height: 1.15;
+      font-weight: 850;
+    }
+
+    .route-info-card small {
+      color: rgba(226,232,240,.62);
+      font-size: 10px;
+      line-height: 1.3;
+      font-weight: 700;
     }
 
     .live-strip {
@@ -456,36 +596,6 @@
       font-size: 12px;
       line-height: 1.45;
       font-weight: 650;
-    }
-
-    .ad-banner {
-      min-height: 96px;
-      margin: 0 0 16px;
-      padding: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      gap: 6px;
-      border: 1px dashed rgba(15, 118, 110, .28);
-      border-radius: var(--radius);
-      background: rgba(255, 255, 255, .74);
-      color: var(--muted);
-      text-align: center;
-      box-shadow: none;
-    }
-
-    .ad-banner strong {
-      color: var(--ink);
-      font-size: 13px;
-      font-weight: 750;
-    }
-
-    .ad-banner span {
-      max-width: 560px;
-      font-size: 12px;
-      line-height: 1.4;
-      font-weight: 600;
     }
 
     .price-cards {
@@ -917,38 +1027,6 @@
       overflow-wrap: anywhere;
     }
 
-    .ad-slot {
-      min-height: 250px;
-      padding: 18px;
-      display: grid;
-      align-content: center;
-      gap: 6px;
-      color: var(--muted);
-      border-style: dashed;
-      box-shadow: none;
-    }
-
-    .ad-slot strong {
-      color: var(--ink);
-      font-size: 13px;
-      letter-spacing: -.01em;
-      font-weight: 750;
-    }
-
-    .ad-slot span {
-      font-size: 12px;
-      line-height: 1.4;
-      font-weight: 650;
-    }
-
-    .mini-btn {
-      min-height: 42px;
-      padding: 0 12px;
-      color: #12352f;
-      background: #e5f3ef;
-      border: 1px solid rgba(15, 118, 110, .18);
-    }
-
     .message {
       min-height: 34px;
       display: flex;
@@ -1181,18 +1259,24 @@
       display: inline;
     }
 
-    #pdf-template {
-      position: fixed;
-      left: -10000px;
+    /* PDF: sursa ramane ascunsa, iar la descarcare se foloseste o clona temporara */
+    #pdf-container {
+      display: none;
+    }
+
+    .pdf-export-stage {
+      position: absolute;
       top: 0;
+      left: -99999px;
       width: 800px;
+      min-height: 1125px;
+      background: #ffffff;
       pointer-events: none;
-      opacity: 0;
+      z-index: 2147483647;
     }
 
     .pdf-page {
       width: 800px;
-      min-height: 1120px;
       padding: 44px;
       background: #fff;
       color: #111827;
@@ -1354,29 +1438,30 @@
         grid-template-columns: 1fr;
       }
 
-      .station-visual {
-        min-height: 178px;
+      .premium-visual {
+        min-height: 190px;
+        padding: 14px;
       }
 
-      .pump-graphic {
-        width: 98px;
-        height: 128px;
-        top: 24px;
+      .route-visual-card {
+        padding: 14px;
+        border-radius: 20px;
       }
 
-      .pump-screen {
-        top: 58px;
-        height: 40px;
-        font-size: 18px;
+      .route-info-grid {
+        grid-template-columns: 1fr;
       }
 
-      .price-stack {
-        right: 18px;
-        width: 148px;
+      .route-visual-title {
+        font-size: 1.15rem;
       }
 
-      .price-mini {
-        padding: 8px 10px;
+      .route-visual-text {
+        font-size: 11px;
+      }
+
+      .route-stage {
+        min-height: 114px;
       }
 
       .workspace,
@@ -1391,16 +1476,12 @@
         margin: 0;
         border-radius: var(--radius);
       }
-
-      .ad-slot {
-        min-height: 120px;
-      }
     }
 
     @media (max-width: 560px) {
       h1 {
         font-size: 2rem;
-        line-height: 1.06;
+        line-height: 1.1;
         letter-spacing: -.035em;
       }
 
@@ -1447,6 +1528,36 @@
         font-size: 1.7rem;
       }
 
+      .route-visual-head {
+        align-items: flex-start;
+      }
+
+      .route-visual-title {
+        font-size: 1.02rem;
+      }
+
+      .route-visual-icon {
+        width: 46px;
+        height: 46px;
+        border-radius: 16px;
+      }
+
+      .route-stage {
+        min-height: 108px;
+        padding: 12px 12px 16px;
+      }
+
+      .route-points,
+      .route-info-card small {
+        font-size: 10px;
+      }
+
+      .route-car {
+        min-width: 48px;
+        height: 34px;
+        padding: 0 10px;
+      }
+
       #total-cost {
         font-size: 2.45rem;
       }
@@ -1460,11 +1571,6 @@
         align-items: flex-start;
       }
 
-      .ad-banner {
-        min-height: 84px;
-        padding: 14px;
-      }
-
       .receipt-line,
       .receipt-highlight {
         gap: 10px;
@@ -1476,6 +1582,31 @@
 
       .receipt-total strong {
         font-size: 28px;
+      }
+    }
+
+
+    @media (max-width: 820px) {
+      .fuel-showcase {
+        grid-template-columns: 1fr;
+      }
+
+      .route-board {
+        min-height: 142px;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .fuel-board h2 {
+        font-size: 1.05rem;
+      }
+
+      .fuel-bar {
+        min-height: 34px;
+      }
+
+      .route-board {
+        min-height: 128px;
       }
     }
 
@@ -1520,18 +1651,48 @@
             <button class="secondary-btn" type="button" id="hero-refresh-btn"><i class="fa-solid fa-rotate"></i> Actualizeaza preturi</button>
           </div>
         </div>
-        <div class="station-visual" aria-hidden="true">
-          <div class="pump-graphic">
-            <i class="fa-solid fa-gas-pump"></i>
-            <div class="pump-screen" id="visual-price">--.--</div>
-            <div class="pump-base"></div>
-          </div>
-          <div class="price-stack">
-            <div class="price-mini"><span>Benzina</span><strong id="mini-benzina">--</strong></div>
-            <div class="price-mini"><span>Motorina</span><strong id="mini-motorina">--</strong></div>
-            <div class="price-mini"><span>GPL</span><strong id="mini-gpl">--</strong></div>
+        
+        <div class="premium-visual" aria-hidden="true">
+          <div class="route-visual-card">
+            <div class="route-visual-head">
+              <div>
+                <span class="route-visual-badge"><i class="fa-solid fa-route"></i> Traseu simplu</span>
+                <h2 class="route-visual-title">Un traseu clar cu o masinuta, fara pompe si fara elemente inutile.</h2>
+                <p class="route-visual-text">Am lasat zona din dreapta mai curata, ca sa arate elegant si sa nu para buguita.</p>
+              </div>
+              <div class="route-visual-icon"><i class="fa-solid fa-car-side"></i></div>
+            </div>
+
+            <div class="route-stage">
+              <div class="route-points">
+                <span>Plecare</span>
+                <span>Sosire</span>
+              </div>
+              <div class="route-node start"></div>
+              <div class="route-node end"></div>
+              <div class="route-car"><i class="fa-solid fa-car-side"></i><small>route</small></div>
+            </div>
+
+            <div class="route-info-grid">
+              <div class="route-info-card">
+                <span>Distanta</span>
+                <strong>introduci rapid</strong>
+                <small>calculezi traseul imediat</small>
+              </div>
+              <div class="route-info-card">
+                <span>Consum</span>
+                <strong>adaptat masinii</strong>
+                <small>oras, mixt sau extern</small>
+              </div>
+              <div class="route-info-card">
+                <span>Cost</span>
+                <strong>rezultat clar</strong>
+                <small>pret live sau manual</small>
+              </div>
+            </div>
           </div>
         </div>
+
       </div>
 
       <aside class="live-strip" aria-label="Preturi live">
@@ -1559,11 +1720,6 @@
         </div>
       </aside>
     </section>
-
-    <aside class="ad-banner" aria-label="Spatiu reclama principal">
-      <strong>Slot reclama 728 x 90 / responsive</strong>
-      <span>Spatiu rezervat pentru Google AdSense sau parteneri, separat de calculator ca sa nu acopere butoane sau rezultate.</span>
-    </aside>
 
     <main class="workspace" id="calculator">
       <div class="column">
@@ -1762,11 +1918,6 @@
           </div>
           <button class="primary-btn" type="button" id="receipt-btn"><i class="fa-solid fa-file-invoice-dollar"></i> Detalii si PDF</button>
         </section>
-
-        <aside class="ad-slot" aria-label="Spatiu partener">
-          <strong>Slot partener 300 x 250</strong>
-          <span>Zona pregatita pentru reclama responsiva. Nu blocheaza calculul si nu apare peste continut pe mobil.</span>
-        </aside>
       </aside>
     </main>
 
@@ -1824,7 +1975,7 @@
     </div>
   </div>
 
-  <div id="pdf-template" aria-hidden="true">
+  <div id="pdf-container" aria-hidden="true">
     <div class="pdf-page">
       <div class="pdf-head">
         <div>
@@ -1898,6 +2049,13 @@
     };
 
     const carDatabase = {
+      "Alfa Romeo": {
+        "159": {
+          "1.9 JTDm 150 CP": { f: "motorina", c: 6.0 },
+          "2.4 JTDm 200 CP": { f: "motorina", c: 6.8 },
+          "1.75 TBi 200 CP": { f: "benzina", c: 8.1 }
+        }
+      },
       "Audi": {
         "A3 (8P / 8V / 8Y)": {
           "1.4 / 1.5 TFSI 125-150 CP": { f: "benzina", c: 5.6 },
@@ -1933,7 +2091,11 @@
         }
       },
       "Citroen": {
-        "C3 / C4": {
+        "C3 (Generatia a 2-a / Zenith)": {
+          "1.2 PureTech 82 CP": { f: "benzina", c: 4.7 },
+          "1.4 HDi 70 CP": { f: "motorina", c: 3.8 }
+        },
+        "C3 / C4 (Alte modele)": {
           "1.2 PureTech 82-130 CP": { f: "benzina", c: 5.5 },
           "1.5 / 1.6 BlueHDi": { f: "motorina", c: 4.4 }
         },
@@ -1966,17 +2128,6 @@
           "Hybrid 140": { f: "benzina", c: 4.9 }
         }
       },
-      "Fiat": {
-        "500 / Panda": {
-          "1.2 8V 69 CP": { f: "benzina", c: 5.2 },
-          "1.0 Hybrid 70 CP": { f: "benzina", c: 4.5 },
-          "1.3 MultiJet": { f: "motorina", c: 3.9 }
-        },
-        "Tipo": {
-          "1.0 / 1.4 benzina": { f: "benzina", c: 6.0 },
-          "1.3 / 1.6 MultiJet": { f: "motorina", c: 4.5 }
-        }
-      },
       "Ford": {
         "Fiesta / Focus": {
           "1.0 EcoBoost": { f: "benzina", c: 5.3 },
@@ -1988,154 +2139,6 @@
           "Puma 1.0 EcoBoost MHEV": { f: "benzina", c: 5.8 },
           "Kuga 1.5 EcoBoost": { f: "benzina", c: 7.0 },
           "Kuga 2.0 TDCi": { f: "motorina", c: 6.2 }
-        }
-      },
-      "Honda": {
-        "Civic": {
-          "1.0 / 1.5 VTEC Turbo": { f: "benzina", c: 6.0 },
-          "1.6 i-DTEC": { f: "motorina", c: 4.2 },
-          "2.0 e:HEV": { f: "benzina", c: 4.8 }
-        },
-        "CR-V": {
-          "2.0 i-VTEC": { f: "benzina", c: 8.2 },
-          "1.6 / 2.2 diesel": { f: "motorina", c: 6.0 },
-          "2.0 e:HEV": { f: "benzina", c: 6.0 }
-        }
-      },
-      "Hyundai": {
-        "i20 / i30": {
-          "1.2 MPI / 1.0 T-GDI": { f: "benzina", c: 5.6 },
-          "1.4 / 1.5 T-GDI": { f: "benzina", c: 6.2 },
-          "1.6 CRDi": { f: "motorina", c: 4.8 }
-        },
-        "Tucson / Santa Fe": {
-          "1.6 T-GDI": { f: "benzina", c: 7.5 },
-          "1.6 CRDi": { f: "motorina", c: 5.8 },
-          "2.2 CRDi": { f: "motorina", c: 7.8 },
-          "Hybrid benzina": { f: "benzina", c: 5.8 }
-        }
-      },
-      "Kia": {
-        "Ceed / Rio": {
-          "1.0 / 1.4 / 1.5 T-GDI": { f: "benzina", c: 6.0 },
-          "1.6 CRDi": { f: "motorina", c: 4.8 }
-        },
-        "Sportage / Sorento": {
-          "1.6 T-GDI": { f: "benzina", c: 7.4 },
-          "1.6 / 2.0 CRDi": { f: "motorina", c: 6.2 },
-          "Hybrid benzina": { f: "benzina", c: 6.0 }
-        }
-      },
-      "Mazda": {
-        "Mazda 3 / Mazda 6": {
-          "2.0 Skyactiv-G": { f: "benzina", c: 6.4 },
-          "2.0 Skyactiv-X": { f: "benzina", c: 5.8 },
-          "2.2 Skyactiv-D": { f: "motorina", c: 5.6 }
-        },
-        "CX-3 / CX-5 / CX-30": {
-          "2.0 Skyactiv-G": { f: "benzina", c: 6.9 },
-          "2.2 Skyactiv-D": { f: "motorina", c: 6.5 }
-        }
-      },
-      "Mercedes-Benz": {
-        "Clasa A / B": {
-          "A180 / A200 benzina": { f: "benzina", c: 6.2 },
-          "A180d / A200d": { f: "motorina", c: 4.7 }
-        },
-        "Clasa C / E": {
-          "C/E 180-300 benzina": { f: "benzina", c: 7.4 },
-          "C/E 200d-220d": { f: "motorina", c: 5.5 },
-          "V6 diesel": { f: "motorina", c: 7.2 }
-        },
-        "GLC / GLE": {
-          "GLC 220d / 250d": { f: "motorina", c: 6.2 },
-          "GLE 250d / 350d": { f: "motorina", c: 8.5 },
-          "GLC 200 / 300": { f: "benzina", c: 8.0 }
-        }
-      },
-      "Nissan": {
-        "Qashqai / Juke": {
-          "1.2 / 1.3 DIG-T": { f: "benzina", c: 6.3 },
-          "1.5 dCi": { f: "motorina", c: 4.8 },
-          "1.6 / 1.7 dCi": { f: "motorina", c: 5.5 }
-        },
-        "X-Trail": {
-          "1.6 / 2.0 dCi": { f: "motorina", c: 6.5 },
-          "e-POWER": { f: "benzina", c: 6.2 }
-        }
-      },
-      "Opel": {
-        "Corsa / Astra": {
-          "1.2 Turbo / 1.4 Turbo": { f: "benzina", c: 5.9 },
-          "1.3 / 1.5 / 1.6 CDTI": { f: "motorina", c: 4.7 }
-        },
-        "Insignia / Grandland": {
-          "1.5 / 2.0 diesel": { f: "motorina", c: 5.6 },
-          "1.2 / 1.6 Turbo benzina": { f: "benzina", c: 6.7 }
-        }
-      },
-      "Peugeot": {
-        "208 / 308": {
-          "1.2 PureTech": { f: "benzina", c: 5.4 },
-          "1.5 / 1.6 BlueHDi": { f: "motorina", c: 4.3 }
-        },
-        "2008 / 3008 / 508": {
-          "1.2 PureTech": { f: "benzina", c: 6.2 },
-          "1.5 / 2.0 BlueHDi": { f: "motorina", c: 5.5 }
-        }
-      },
-      "Renault": {
-        "Clio / Megane": {
-          "0.9 / 1.0 / 1.3 TCe": { f: "benzina", c: 5.8 },
-          "1.0 TCe LPG": { f: "gpl", c: 7.2 },
-          "1.5 dCi": { f: "motorina", c: 4.4 }
-        },
-        "Captur / Kadjar / Austral": {
-          "1.2 / 1.3 TCe": { f: "benzina", c: 6.5 },
-          "1.5 / 1.6 dCi": { f: "motorina", c: 5.1 },
-          "Hybrid benzina": { f: "benzina", c: 5.8 }
-        }
-      },
-      "SEAT": {
-        "Ibiza / Leon": {
-          "1.0 / 1.2 / 1.5 TSI": { f: "benzina", c: 5.5 },
-          "1.6 / 2.0 TDI": { f: "motorina", c: 4.8 }
-        },
-        "Ateca / Formentor": {
-          "1.5 TSI": { f: "benzina", c: 6.7 },
-          "2.0 TDI": { f: "motorina", c: 5.9 }
-        }
-      },
-      "Skoda": {
-        "Fabia / Octavia": {
-          "1.0 / 1.5 TSI": { f: "benzina", c: 5.5 },
-          "1.6 / 2.0 TDI": { f: "motorina", c: 4.8 }
-        },
-        "Superb / Karoq / Kodiaq": {
-          "1.5 / 2.0 TSI": { f: "benzina", c: 6.9 },
-          "2.0 TDI": { f: "motorina", c: 5.9 }
-        }
-      },
-      "Suzuki": {
-        "Swift / Ignis": {
-          "1.2 Hybrid": { f: "benzina", c: 4.8 },
-          "1.3 DDiS": { f: "motorina", c: 4.2 }
-        },
-        "Vitara / SX4 S-Cross": {
-          "1.4 BoosterJet Hybrid": { f: "benzina", c: 5.8 },
-          "1.6 DDiS": { f: "motorina", c: 5.0 }
-        }
-      },
-      "Toyota": {
-        "Yaris / Corolla": {
-          "1.0 / 1.5 VVT-i": { f: "benzina", c: 5.5 },
-          "1.5 / 1.8 Hybrid": { f: "benzina", c: 4.4 },
-          "2.0 Hybrid": { f: "benzina", c: 4.8 },
-          "1.4 D-4D": { f: "motorina", c: 4.5 }
-        },
-        "C-HR / RAV4": {
-          "Hybrid benzina": { f: "benzina", c: 5.4 },
-          "2.0 / 2.2 D-4D": { f: "motorina", c: 7.0 }
         }
       },
       "Volkswagen": {
@@ -2153,17 +2156,6 @@
           "1.5 / 2.0 TSI": { f: "benzina", c: 7.8 },
           "2.0 TDI": { f: "motorina", c: 6.5 },
           "3.0 TDI V6": { f: "motorina", c: 8.4 }
-        }
-      },
-      "Volvo": {
-        "S60 / V60": {
-          "T3 / T4 / T5 benzina": { f: "benzina", c: 7.5 },
-          "D3 / D4 diesel": { f: "motorina", c: 5.7 }
-        },
-        "XC60 / XC90": {
-          "D4 / D5 diesel": { f: "motorina", c: 7.5 },
-          "T5 / T6 benzina": { f: "benzina", c: 8.8 },
-          "T8 PHEV benzina": { f: "benzina", c: 7.0 }
         }
       }
     };
@@ -2196,8 +2188,8 @@
         "total-cost", "summary-subtitle", "summary-car", "summary-distance",
         "summary-real-cons", "summary-liters", "summary-source", "open-receipt-btn",
         "receipt-btn", "receipt-modal", "close-receipt-btn", "download-pdf-btn",
-        "local-updated", "visual-price", "card-motorina", "card-benzina", "card-gpl",
-        "mini-motorina", "mini-benzina", "mini-gpl", "hero-refresh-btn", "refresh-prices-btn"
+        "local-updated", "card-motorina", "card-benzina", "card-gpl",
+        "hero-refresh-btn", "refresh-prices-btn"
       ].forEach((id) => {
         els[id] = byId(id);
       });
@@ -2482,10 +2474,6 @@
       els["card-motorina"].textContent = formatPrice(motorina);
       els["card-benzina"].textContent = formatPrice(benzina);
       els["card-gpl"].textContent = formatPrice(gpl);
-      els["mini-motorina"].textContent = formatPrice(motorina);
-      els["mini-benzina"].textContent = formatPrice(benzina);
-      els["mini-gpl"].textContent = formatPrice(gpl);
-      els["visual-price"].textContent = formatPrice(getLivePrice());
     }
 
     function calculate() {
@@ -2538,7 +2526,6 @@
       els["summary-real-cons"].textContent = formatNumber(result.realConsumption, 1);
       els["summary-liters"].textContent = formatNumber(result.liters, 2);
       els["summary-source"].textContent = result.source;
-      els["visual-price"].textContent = formatPrice(result.fuelPrice || getLivePrice());
 
       updateReceipt(result, car, fuelLabel);
       updatePdf(result, car, fuelLabel);
@@ -2599,24 +2586,169 @@
 
     async function generatePDF() {
       updateAll();
+
       const button = els["download-pdf-btn"];
       const previous = button.innerHTML;
+
       button.disabled = true;
       button.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Se genereaza PDF';
 
       try {
-        const element = document.querySelector("#pdf-template .pdf-page");
-        const options = {
-          margin: 8,
-          filename: "Deviz_Cost_Combustibil.pdf",
-          image: { type: "jpeg", quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true },
-          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+        const JsPdfCtor = window.jspdf && window.jspdf.jsPDF;
+        if (!JsPdfCtor) {
+          throw new Error("Biblioteca jsPDF nu s-a incarcat corect.");
+        }
+
+        const result = state.lastResult || calculate();
+        const car = state.carName || "Nespecificata";
+        const fuelLabel = fuelMeta[state.fuel].label;
+        const doc = new JsPdfCtor({ unit: "mm", format: "a4", orientation: "portrait" });
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const margin = 15;
+        const contentWidth = pageWidth - margin * 2;
+        let y = 18;
+
+        const split = (value, width) => doc.splitTextToSize(String(value), width);
+        const line = (x1, y1, x2, y2, color = [220, 228, 226]) => {
+          doc.setDrawColor(...color);
+          doc.line(x1, y1, x2, y2);
         };
-        await html2pdf().set(options).from(element).save();
+        const textBlock = (value, x, yPos, width, fontSize = 10.5, color = [17, 24, 39], weight = "normal", lineHeight = 4.6) => {
+          doc.setFont("helvetica", weight);
+          doc.setFontSize(fontSize);
+          doc.setTextColor(...color);
+          const lines = split(value, width);
+          doc.text(lines, x, yPos);
+          return lines.length * lineHeight;
+        };
+        const infoCard = (title, lines, x, yPos, width, minHeight = 36) => {
+          let cursor = yPos + 8;
+          doc.setFillColor(246, 248, 247);
+          doc.setDrawColor(220, 228, 226);
+          doc.roundedRect(x, yPos, width, minHeight, 4, 4, "FD");
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(10);
+          doc.setTextColor(15, 118, 110);
+          doc.text(title.toUpperCase(), x + 6, cursor);
+          cursor += 5;
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(12);
+          doc.setTextColor(17, 24, 39);
+          const first = split(lines[0], width - 12);
+          doc.text(first, x + 6, cursor);
+          cursor += first.length * 4.8 + 1;
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(10.5);
+          doc.setTextColor(71, 85, 105);
+          for (const item of lines.slice(1)) {
+            const rows = split(item, width - 12);
+            doc.text(rows, x + 6, cursor);
+            cursor += rows.length * 4.4 + 1;
+          }
+          return Math.max(minHeight, cursor - yPos + 3);
+        };
+
+        doc.setFillColor(255, 255, 255);
+        doc.rect(0, 0, pageWidth, doc.internal.pageSize.getHeight(), "F");
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(24);
+        doc.setTextColor(17, 24, 39);
+        doc.text("Deviz cost combustibil", margin, y);
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10.5);
+        doc.setTextColor(100, 116, 139);
+        doc.text("Generat de Cost Combustibil Live", margin, y + 6.5);
+
+        doc.setFillColor(229, 243, 239);
+        doc.setDrawColor(15, 118, 110);
+        doc.roundedRect(pageWidth - 28, 12, 13, 13, 3, 3, "FD");
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.setTextColor(15, 118, 110);
+        doc.text("P", pageWidth - 23.5, 20.7, { align: "center" });
+
+        line(margin, 30, pageWidth - margin, 30, [15, 118, 110]);
+        y = 38;
+
+        const leftX = margin;
+        const rightX = margin + (contentWidth / 2) + 4;
+        const boxWidth = (contentWidth / 2) - 4;
+        const leftHeight = infoCard("Autoturism", [car, `Consum baza: ${formatNumber(result.baseConsumption, 1)} L/100km`, `Combustibil: ${fuelLabel}`], leftX, y, boxWidth, 38);
+        const rightHeight = infoCard("Calatorie", [`Distanta: ${formatNumber(result.realDistance, result.realDistance % 1 === 0 ? 0 : 1)} km`, `Pret: ${formatNumber(result.fuelPrice, 2)} Lei/L`, `Sursa pret: ${result.source}`], rightX, y, boxWidth, 38);
+        y += Math.max(leftHeight, rightHeight) + 12;
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(13.5);
+        doc.setTextColor(17, 24, 39);
+        doc.text("Calcul consum", margin, y);
+        y += 5;
+
+        const rows = [
+          ["Consum baza", `${formatNumber(result.baseConsumption, 1)} L/100km`],
+          ["Ajustare traseu", result.routeAdjust],
+          ["Ajustare AC", state.ac ? "+5%" : "0%"],
+          ["Ajustare pasageri", `+${formatNumber(result.passengerAdd, 1)} L/100km`],
+          ["Consum real estimat", `${formatNumber(result.realConsumption, 1)} L/100km`],
+          ["Volum combustibil", `${formatNumber(result.liters, 2)} L`],
+          ["Formula", `${formatNumber(result.liters, 2)} L x ${formatNumber(result.fuelPrice, 2)} Lei/L`]
+        ];
+
+        y += 3;
+        rows.forEach(([label, value], index) => {
+          const highlight = label === "Consum real estimat";
+          if (highlight) {
+            doc.setFillColor(229, 243, 239);
+            doc.roundedRect(margin, y - 5, contentWidth, 10, 2.5, 2.5, "F");
+          }
+          doc.setFont("helvetica", highlight ? "bold" : "normal");
+          doc.setFontSize(10.8);
+          doc.setTextColor(...(highlight ? [15, 78, 71] : [71, 85, 105]));
+          doc.text(label, margin + 1, y + 1.5);
+          doc.setFont("helvetica", "bold");
+          doc.setTextColor(...(highlight ? [15, 78, 71] : [17, 24, 39]));
+          doc.text(String(value), pageWidth - margin - 1, y + 1.5, { align: "right" });
+          y += 8.6;
+          if (!highlight && index < rows.length - 1) {
+            line(margin, y - 2.8, pageWidth - margin, y - 2.8);
+          }
+        });
+
+        y += 4;
+        doc.setFillColor(17, 24, 39);
+        doc.roundedRect(margin, y, contentWidth, 30, 4, 4, "F");
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9.5);
+        doc.setTextColor(148, 163, 184);
+        doc.text("Cost final", margin + 8, y + 8);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10.5);
+        doc.setTextColor(255, 255, 255);
+        doc.text(`Volum necesar: ${formatNumber(result.liters, 2)} L`, margin + 8, y + 16);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(24);
+        doc.text(`${formatNumber(result.total, 2)} RON`, pageWidth - margin - 8, y + 18, { align: "right" });
+
+        y += 38;
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8.8);
+        doc.setTextColor(148, 163, 184);
+        const footer = "Document informativ, nu document fiscal. Verifica intotdeauna pretul afisat la pompa.";
+        doc.text(split(footer, contentWidth), pageWidth / 2, y, { align: "center" });
+
+        const blob = doc.output("blob");
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.download = "Deviz_Cost_Combustibil.pdf";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 3000);
       } catch (error) {
-        alert("Nu am putut genera PDF-ul. Verifica daca libraria html2pdf s-a incarcat corect.");
-        console.error(error);
+        console.error("PDF error:", error);
+        alert("PDF-ul nu s-a putut genera corect. Reincarca pagina si incearca din nou.");
       } finally {
         button.disabled = false;
         button.innerHTML = previous;
