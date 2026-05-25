@@ -157,7 +157,7 @@ const els = {};
         const words = query.split(" ").filter(Boolean);
         const matches = carSearchIndex
           .filter((item) => words.every((word) => item.search.includes(word)))
-          .slice(0, 12);
+          .slice(0, 20);
         if (!matches.length) {
           results.innerHTML = `<div class="message warn"><i class="fa-solid fa-circle-info"></i> Nu am gasit masina. Alege manual marca/modelul sau scrie consumul.</div>`;
           return;
@@ -288,8 +288,12 @@ const els = {};
       return state.nationalPrices?.[meta.minimeKey]?.mediu ?? meta.fallback;
     }
 
+    function getSelectedCounty() {
+      return state.area && state.area.startsWith("county:") ? state.area.replace("county:", "") : null;
+    }
+
     function getSelectedCity() {
-      if (state.area === "national" || String(state.area).startsWith("county:")) return null;
+      if (state.area === "national" || (state.area && state.area.startsWith("county:"))) return null;
       return state.cityPrices.find((item) => item.slug === state.area) || null;
     }
 
@@ -305,8 +309,9 @@ const els = {};
     function getPriceSourceLabel() {
       if (state.priceMode === "manual") return "Manual";
       const city = getSelectedCity();
+      const county = getSelectedCounty();
       if (city) return `Live API - ${city.oras}`;
-      if (String(state.area).startsWith("county:")) return `Live API - ${String(state.area).replace("county:", "")} / medie nationala`;
+      if (county) return `Judet ${county} - medie nationala`;
       return "Live API - medie nationala";
     }
 
@@ -414,17 +419,28 @@ const els = {};
       const selected = state.area;
       els["price-area"].innerHTML = '<option value="national">Medie nationala</option>';
 
+      if (Array.isArray(window.romanianCounties) && window.romanianCounties.length) {
+        const countyGroup = document.createElement("optgroup");
+        countyGroup.label = "Judete - medie nationala";
+        window.romanianCounties
+          .slice()
+          .sort((a, b) => String(a).localeCompare(String(b), "ro"))
+          .forEach((county) => {
+            countyGroup.appendChild(new Option(county, `county:${county}`));
+          });
+        els["price-area"].appendChild(countyGroup);
+      }
+
       if (state.cityPrices.length) {
+        const cityGroup = document.createElement("optgroup");
+        cityGroup.label = "Orase disponibile prin API";
         state.cityPrices
           .slice()
           .sort((a, b) => String(a.oras).localeCompare(String(b.oras), "ro"))
           .forEach((city) => {
-            els["price-area"].add(new Option(`${city.oras} (${city.judet})`, city.slug));
+            cityGroup.appendChild(new Option(`${city.oras} (${city.judet})`, city.slug));
           });
-      } else if (Array.isArray(window.romanianCounties)) {
-        window.romanianCounties.forEach((county) => {
-          els["price-area"].add(new Option(`${county} - medie nationala`, `county:${county}`));
-        });
+        els["price-area"].appendChild(cityGroup);
       }
 
       els["price-area"].value = [...els["price-area"].options].some((option) => option.value === selected)
@@ -562,22 +578,40 @@ async function loadPdfLogoDataUrl() {
       });
     }
 
-    async function savePdfOnDevice(doc, filename) {
-      const blob = doc.output("blob");
-      const file = new File([blob], filename, { type: "application/pdf" });
-
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title: "Deviz cost combustibil",
-          text: "PDF generat de Cost Combustibil Live"
-        });
-        return;
-      }
-
-      const blobUrl = URL.createObjectURL(blob);
+    function isIOSDevice() {
       const ua = navigator.userAgent || "";
-      const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+      return /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    }
+
+    async function savePdfOnDevice(doc, filename, preOpenedWindow = null) {
+      const blob = doc.output("blob");
+      const blobUrl = URL.createObjectURL(blob);
+
+      const openInWindow = () => {
+        if (preOpenedWindow && !preOpenedWindow.closed) {
+          preOpenedWindow.location.href = blobUrl;
+          return true;
+        }
+        const opened = window.open(blobUrl, "_blank");
+        return Boolean(opened);
+      };
+
+      try {
+        if (window.File && navigator.canShare && navigator.share) {
+          const file = new File([blob], filename, { type: "application/pdf" });
+          if (navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              files: [file],
+              title: "Deviz cost combustibil",
+              text: "PDF generat de Cost Combustibil Live"
+            });
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+            return;
+          }
+        }
+      } catch (shareError) {
+        console.warn("Share PDF indisponibil, folosesc fallback:", shareError);
+      }
 
       const link = document.createElement("a");
       link.href = blobUrl;
@@ -586,9 +620,11 @@ async function loadPdfLogoDataUrl() {
       link.style.display = "none";
       document.body.appendChild(link);
 
-      if (isIOS) {
-        const opened = window.open(blobUrl, "_blank");
-        if (!opened) window.location.href = blobUrl;
+      if (isIOSDevice()) {
+        const opened = openInWindow();
+        if (!opened) {
+          link.click();
+        }
       } else {
         link.click();
       }
@@ -601,6 +637,11 @@ async function loadPdfLogoDataUrl() {
 
     async function generatePDF() {
       updateAll();
+
+      const pdfWindow = isIOSDevice() ? window.open("", "_blank") : null;
+      if (pdfWindow) {
+        pdfWindow.document.write("<p style='font-family:system-ui;padding:20px'>Se genereaza PDF...</p>");
+      }
 
       const button = els["download-pdf-btn"];
       const previous = button.innerHTML;
@@ -760,6 +801,7 @@ async function loadPdfLogoDataUrl() {
 
         await savePdfOnDevice(doc, "Deviz_Cost_Combustibil.pdf");
       } catch (error) {
+        if (pdfWindow && !pdfWindow.closed) pdfWindow.close();
         console.error("PDF error:", error);
         alert("PDF-ul nu s-a putut genera corect. Reincarca pagina si incearca din nou.");
       } finally {
@@ -809,6 +851,11 @@ async function loadPdfLogoDataUrl() {
 
     function init() {
       cacheElements();
+      if (typeof carDatabase === "undefined") {
+        console.error("masini.js nu este incarcat. Verifica daca fisierul masini.js este langa index.html si este chemat inainte de script.js.");
+        setTimeout(() => alert("Nu s-a incarcat masini.js. Verifica numele fisierului si ordinea scripturilor."), 300);
+        return;
+      }
       populateCars();
       initCarSearch();
       bindEvents();
