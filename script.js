@@ -24,117 +24,8 @@ const API = {
       }
     };
 
-    const carDatabase = {
-      "Alfa Romeo": {
-        "159": {
-          "1.9 JTDm 150 CP": { f: "motorina", c: 6.0 },
-          "2.4 JTDm 200 CP": { f: "motorina", c: 6.8 },
-          "1.75 TBi 200 CP": { f: "benzina", c: 8.1 }
-        }
-      },
-      "Audi": {
-        "A3 (8P / 8V / 8Y)": {
-          "1.4 / 1.5 TFSI 125-150 CP": { f: "benzina", c: 5.6 },
-          "1.6 TDI 105-116 CP": { f: "motorina", c: 4.4 },
-          "2.0 TDI 140-184 CP": { f: "motorina", c: 4.9 }
-        },
-        "A4 (B7 / B8 / B9)": {
-          "1.8 / 2.0 TFSI 160-252 CP": { f: "benzina", c: 6.7 },
-          "2.0 TDI 140-190 CP": { f: "motorina", c: 5.2 },
-          "3.0 TDI V6 204-286 CP": { f: "motorina", c: 6.6 }
-        },
-        "Q5": {
-          "2.0 TFSI 211-252 CP": { f: "benzina", c: 8.2 },
-          "2.0 TDI 150-190 CP": { f: "motorina", c: 6.2 },
-          "3.0 TDI V6": { f: "motorina", c: 7.2 }
-        }
-      },
-      "BMW": {
-        "Seria 1 (E87 / F20 / F40)": {
-          "116i / 118i": { f: "benzina", c: 6.2 },
-          "116d / 118d": { f: "motorina", c: 4.5 },
-          "120d": { f: "motorina", c: 4.9 }
-        },
-        "Seria 3 (E46 / E90 / F30 / G20)": {
-          "320i / 330i": { f: "benzina", c: 6.9 },
-          "318d / 320d": { f: "motorina", c: 5.0 },
-          "330d": { f: "motorina", c: 5.8 }
-        },
-        "X3 / X5": {
-          "X3 20d / 30d": { f: "motorina", c: 6.7 },
-          "X5 30d / 40d": { f: "motorina", c: 7.8 },
-          "X5 40i benzina": { f: "benzina", c: 9.5 }
-        }
-      },
-      "Citroen": {
-        "C3 (Generatia a 2-a / Zenith)": {
-          "1.2 PureTech 82 CP": { f: "benzina", c: 4.7 },
-          "1.4 HDi 70 CP": { f: "motorina", c: 3.8 }
-        },
-        "C3 / C4 (Alte modele)": {
-          "1.2 PureTech 82-130 CP": { f: "benzina", c: 5.5 },
-          "1.5 / 1.6 BlueHDi": { f: "motorina", c: 4.4 }
-        },
-        "C5 / C5 Aircross": {
-          "1.2 / 1.6 PureTech": { f: "benzina", c: 6.5 },
-          "1.5 / 2.0 BlueHDi": { f: "motorina", c: 5.5 }
-        }
-      },
-      "Dacia": {
-        "Logan": {
-          "1.0 SCe / 1.2 16V": { f: "benzina", c: 5.6 },
-          "0.9 / 1.0 TCe": { f: "benzina", c: 5.3 },
-          "1.0 ECO-G GPL": { f: "gpl", c: 7.1 },
-          "1.5 dCi": { f: "motorina", c: 4.2 }
-        },
-        "Sandero / Stepway": {
-          "1.0 TCe 90-110 CP": { f: "benzina", c: 5.5 },
-          "1.0 ECO-G GPL": { f: "gpl", c: 7.3 },
-          "1.5 dCi": { f: "motorina", c: 4.0 }
-        },
-        "Duster": {
-          "1.0 ECO-G GPL": { f: "gpl", c: 7.8 },
-          "1.3 TCe 130-150 CP": { f: "benzina", c: 6.5 },
-          "1.5 dCi / Blue dCi": { f: "motorina", c: 5.1 },
-          "Hybrid 140": { f: "benzina", c: 5.0 }
-        },
-        "Jogger": {
-          "1.0 TCe 110 CP": { f: "benzina", c: 5.8 },
-          "1.0 ECO-G GPL": { f: "gpl", c: 7.8 },
-          "Hybrid 140": { f: "benzina", c: 4.9 }
-        }
-      },
-      "Ford": {
-        "Fiesta / Focus": {
-          "1.0 EcoBoost": { f: "benzina", c: 5.3 },
-          "1.5 EcoBoost": { f: "benzina", c: 6.2 },
-          "1.5 / 1.6 TDCi": { f: "motorina", c: 4.6 },
-          "2.0 TDCi / EcoBlue": { f: "motorina", c: 5.2 }
-        },
-        "Puma / Kuga": {
-          "Puma 1.0 EcoBoost MHEV": { f: "benzina", c: 5.8 },
-          "Kuga 1.5 EcoBoost": { f: "benzina", c: 7.0 },
-          "Kuga 2.0 TDCi": { f: "motorina", c: 6.2 }
-        }
-      },
-      "Volkswagen": {
-        "Golf / Polo": {
-          "1.0 / 1.2 / 1.5 TSI": { f: "benzina", c: 5.5 },
-          "1.6 TDI": { f: "motorina", c: 4.4 },
-          "2.0 TDI": { f: "motorina", c: 4.9 }
-        },
-        "Passat": {
-          "1.5 / 2.0 TSI": { f: "benzina", c: 6.7 },
-          "1.6 / 2.0 TDI": { f: "motorina", c: 5.2 },
-          "2.0 BiTDI": { f: "motorina", c: 6.5 }
-        },
-        "Tiguan / Touareg": {
-          "1.5 / 2.0 TSI": { f: "benzina", c: 7.8 },
-          "2.0 TDI": { f: "motorina", c: 6.5 },
-          "3.0 TDI V6": { f: "motorina", c: 8.4 }
-        }
-      }
-    };
+    // carDatabase este încărcat din masini.js
+
 
     const els = {};
     const state = {
@@ -201,6 +92,85 @@ const API = {
         els.brand.add(new Option(brand, brand));
       });
     }
+
+    function buildCarSearchIndex() {
+      const items = [];
+      Object.entries(carDatabase || {}).forEach(([brand, models]) => {
+        Object.entries(models || {}).forEach(([model, engines]) => {
+          Object.entries(engines || {}).forEach(([engine, data]) => {
+            items.push({
+              brand,
+              model,
+              engine,
+              fuel: data.f,
+              consumption: data.c,
+              label: `${brand} ${model} ${engine}`.toLowerCase()
+            });
+          });
+        });
+      });
+      return items;
+    }
+
+    let carSearchIndex = [];
+
+    function initCarSearch() {
+      const searchInput = document.getElementById("car-search");
+      if (!searchInput) return;
+
+      carSearchIndex = buildCarSearchIndex();
+      const results = document.getElementById("car-search-results");
+      if (!results) return;
+
+      searchInput.addEventListener("input", () => {
+        const query = searchInput.value.trim().toLowerCase();
+        results.innerHTML = "";
+
+        if (query.length < 2) return;
+
+        const matches = carSearchIndex
+          .filter((item) => item.label.includes(query))
+          .slice(0, 10);
+
+        if (!matches.length) {
+          results.innerHTML = `
+            <div class="message warn">
+              <i class="fa-solid fa-circle-info"></i>
+              Nu am găsit masina. Selectează manual sau introdu consumul mixt.
+            </div>
+          `;
+          return;
+        }
+
+        matches.forEach((item) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "search-result";
+          button.innerHTML = `
+            <strong>${item.brand} ${item.model}</strong>
+            <span>${item.engine} • ${fuelMeta[item.fuel]?.label || item.fuel} • ${formatNumber(item.consumption, 1)} L/100km</span>
+          `;
+
+          button.addEventListener("click", () => {
+            selectCarFromSearch(item);
+            results.innerHTML = "";
+            searchInput.value = `${item.brand} ${item.model} ${item.engine}`;
+          });
+
+          results.appendChild(button);
+        });
+      });
+    }
+
+    function selectCarFromSearch(item) {
+      els.brand.value = item.brand;
+      populateModels();
+      els.model.value = item.model;
+      populateEngines();
+      els.engine.value = item.engine;
+      applyEngine();
+    }
+
 
     function populateModels() {
       const brand = els.brand.value;
@@ -308,7 +278,7 @@ const API = {
     }
 
     function getSelectedCity() {
-      if (state.area === "national") return null;
+      if (state.area === "national" || String(state.area).startsWith("county:")) return null;
       return state.cityPrices.find((item) => item.slug === state.area) || null;
     }
 
@@ -324,7 +294,9 @@ const API = {
     function getPriceSourceLabel() {
       if (state.priceMode === "manual") return "Manual";
       const city = getSelectedCity();
-      return city ? `Live API - ${city.oras}` : "Live API - medie nationala";
+      if (city) return `Live API - ${city.oras}`;
+      if (String(state.area).startsWith("county:")) return `Live API - medie nationala (${state.area.replace("county:", "")})`;
+      return "Live API - medie nationala";
     }
 
     function applyLivePrice() {
@@ -336,7 +308,7 @@ const API = {
       const price = getLivePrice();
       els["fuel-price"].value = formatPrice(price);
       const city = getSelectedCity();
-      const areaText = city ? city.oras : "media nationala";
+      const areaText = city ? city.oras : (String(state.area).startsWith("county:") ? `${state.area.replace("county:", "")} / media nationala` : "media nationala");
       els["price-note"].textContent = `${fuelMeta[state.fuel].label}: ${formatPrice(price)} Lei/L, ${areaText}.`;
       setMessage("success", "fa-solid fa-circle-check", `Pret aplicat automat pentru ${areaText}.`);
       updateAll();
@@ -430,12 +402,29 @@ const API = {
     function populateAreas() {
       const selected = state.area;
       els["price-area"].innerHTML = '<option value="national">Medie nationala</option>';
-      state.cityPrices
-        .slice()
-        .sort((a, b) => String(a.oras).localeCompare(String(b.oras), "ro"))
-        .forEach((city) => {
-          els["price-area"].add(new Option(`${city.oras} (${city.judet})`, city.slug));
+
+      const cities = Array.isArray(state.cityPrices) ? state.cityPrices : [];
+      if (cities.length) {
+        const cityGroup = document.createElement("optgroup");
+        cityGroup.label = "Orașe din API";
+        cities
+          .slice()
+          .sort((a, b) => String(a.oras).localeCompare(String(b.oras), "ro"))
+          .forEach((city) => {
+            cityGroup.appendChild(new Option(`${city.oras} (${city.judet})`, city.slug));
+          });
+        els["price-area"].appendChild(cityGroup);
+      }
+
+      if (Array.isArray(window.romanianCounties)) {
+        const countyGroup = document.createElement("optgroup");
+        countyGroup.label = "Județe România";
+        window.romanianCounties.forEach((county) => {
+          countyGroup.appendChild(new Option(`${county} - fallback medie națională`, `county:${county}`));
         });
+        els["price-area"].appendChild(countyGroup);
+      }
+
       els["price-area"].value = [...els["price-area"].options].some((option) => option.value === selected)
         ? selected
         : "national";
@@ -819,6 +808,7 @@ async function loadPdfLogoDataUrl() {
     function init() {
       cacheElements();
       populateCars();
+      initCarSearch();
       bindEvents();
       els["price-source-mode"].value = state.priceMode;
       els["price-area"].value = state.area;
