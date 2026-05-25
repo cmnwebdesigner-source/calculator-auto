@@ -559,11 +559,9 @@ const API = {
     function closeReceipt() {
       els["receipt-modal"].classList.remove("open");
     }
-
-
-    async function imageUrlToDataUrl(url) {
-      const response = await fetch(url);
-      if (!response.ok) throw new Error(`Imagine indisponibila: ${url}`);
+async function loadPdfLogoDataUrl() {
+      const response = await fetch("assets/logo.png", { cache: "force-cache" });
+      if (!response.ok) throw new Error("Logo-ul nu s-a putut incarca.");
       const blob = await response.blob();
       return await new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -573,27 +571,41 @@ const API = {
       });
     }
 
-    function isIOSDevice() {
-      return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-    }
+    async function savePdfOnDevice(doc, filename) {
+      const blob = doc.output("blob");
+      const file = new File([blob], filename, { type: "application/pdf" });
 
-    function savePdfBlob(blob, filename) {
-      const blobUrl = URL.createObjectURL(blob);
-      if (isIOSDevice()) {
-        const opened = window.open(blobUrl, "_blank");
-        if (!opened) {
-          alert("PDF-ul a fost generat, dar browserul a blocat fereastra. Permite pop-up pentru site si incearca din nou.");
-        }
-        setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: "Deviz cost combustibil",
+          text: "PDF generat de Cost Combustibil Live"
+        });
         return;
       }
+
+      const blobUrl = URL.createObjectURL(blob);
+      const ua = navigator.userAgent || "";
+      const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
       const link = document.createElement("a");
       link.href = blobUrl;
       link.download = filename;
+      link.rel = "noopener";
+      link.style.display = "none";
       document.body.appendChild(link);
-      link.click();
-      link.remove();
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+
+      if (isIOS) {
+        const opened = window.open(blobUrl, "_blank");
+        if (!opened) window.location.href = blobUrl;
+      } else {
+        link.click();
+      }
+
+      setTimeout(() => {
+        URL.revokeObjectURL(blobUrl);
+        link.remove();
+      }, 60000);
     }
 
     async function generatePDF() {
@@ -674,8 +686,8 @@ const API = {
         doc.text("Generat de Cost Combustibil Live", margin, y + 6.5);
 
         try {
-          const logoDataUrl = await imageUrlToDataUrl("./assets/logo.png");
-          doc.addImage(logoDataUrl, "PNG", pageWidth - 30, 11, 17, 17);
+          const logoDataUrl = await loadPdfLogoDataUrl();
+          doc.addImage(logoDataUrl, "PNG", pageWidth - 31, 10, 18, 18);
         } catch (logoError) {
           console.warn("Logo PDF indisponibil:", logoError);
           doc.setFillColor(229, 243, 239);
@@ -755,8 +767,7 @@ const API = {
         const footer = "Document informativ, nu document fiscal. Verifica intotdeauna pretul afisat la pompa.";
         doc.text(split(footer, contentWidth), pageWidth / 2, y, { align: "center" });
 
-        const blob = doc.output("blob");
-        savePdfBlob(blob, "Deviz_Cost_Combustibil.pdf");
+        await savePdfOnDevice(doc, "Deviz_Cost_Combustibil.pdf");
       } catch (error) {
         console.error("PDF error:", error);
         alert("PDF-ul nu s-a putut genera corect. Reincarca pagina si incearca din nou.");
