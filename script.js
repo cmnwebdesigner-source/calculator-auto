@@ -143,6 +143,7 @@ const els = {};
       const searchInput = els["car-search"];
       if (!searchInput) return;
       carSearchIndex = buildCarSearchIndex();
+      searchInput.parentElement.classList.add("search-field");
       let results = document.getElementById("car-search-results");
       if (!results) {
         results = document.createElement("div");
@@ -157,11 +158,12 @@ const els = {};
         const words = query.split(" ").filter(Boolean);
         const matches = carSearchIndex
           .filter((item) => words.every((word) => item.search.includes(word)))
-          .slice(0, 20);
+          .slice(0, 60);
         if (!matches.length) {
-          results.innerHTML = `<div class="message warn"><i class="fa-solid fa-circle-info"></i> Nu am gasit masina. Alege manual marca/modelul sau scrie consumul.</div>`;
+          results.innerHTML = `<div class="search-empty"><i class="fa-solid fa-circle-info"></i> Nu am gasit masina. Alege manual marca/modelul sau scrie consumul.</div>`;
           return;
         }
+        results.scrollTop = 0;
         matches.forEach((item) => {
           const button = document.createElement("button");
           button.type = "button";
@@ -175,6 +177,14 @@ const els = {};
           results.appendChild(button);
         });
       };
+      results.addEventListener("wheel", (event) => {
+        const atTop = results.scrollTop === 0;
+        const atBottom = Math.ceil(results.scrollTop + results.clientHeight) >= results.scrollHeight;
+        if ((event.deltaY < 0 && !atTop) || (event.deltaY > 0 && !atBottom)) {
+          event.stopPropagation();
+        }
+      }, { passive: true });
+
       searchInput.addEventListener("input", renderResults);
       searchInput.addEventListener("search", renderResults);
       document.addEventListener("click", (event) => {
