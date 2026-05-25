@@ -142,53 +142,97 @@ const els = {};
     function initCarSearch() {
       const searchInput = els["car-search"];
       if (!searchInput) return;
+
       carSearchIndex = buildCarSearchIndex();
       searchInput.parentElement.classList.add("search-field");
+
       let results = document.getElementById("car-search-results");
       if (!results) {
         results = document.createElement("div");
         results.className = "search-results";
         results.id = "car-search-results";
+        results.setAttribute("role", "listbox");
         searchInput.parentElement.appendChild(results);
       }
+
+      let pointerStartedAsScroll = false;
+      let touchStartY = 0;
+
+      results.addEventListener("touchstart", (event) => {
+        pointerStartedAsScroll = false;
+        touchStartY = event.touches?.[0]?.clientY || 0;
+      }, { passive: true });
+
+      results.addEventListener("touchmove", (event) => {
+        const y = event.touches?.[0]?.clientY || 0;
+        if (Math.abs(y - touchStartY) > 7) pointerStartedAsScroll = true;
+        event.stopPropagation();
+      }, { passive: true });
+
+      results.addEventListener("wheel", (event) => {
+        event.stopPropagation();
+      }, { passive: true });
+
+      const closeResults = () => {
+        results.innerHTML = "";
+        results.scrollTop = 0;
+      };
+
+      const chooseItem = (item) => {
+        selectCarFromSearch(item);
+        searchInput.value = `${item.brand} ${item.model} ${item.engine}`;
+        closeResults();
+      };
+
       const renderResults = () => {
         const query = normalizeSearchText(searchInput.value);
         results.innerHTML = "";
+        results.scrollTop = 0;
+
         if (query.length < 2) return;
+
         const words = query.split(" ").filter(Boolean);
         const matches = carSearchIndex
           .filter((item) => words.every((word) => item.search.includes(word)))
-          .slice(0, 60);
+          .slice(0, 80);
+
         if (!matches.length) {
           results.innerHTML = `<div class="search-empty"><i class="fa-solid fa-circle-info"></i> Nu am gasit masina. Alege manual marca/modelul sau scrie consumul.</div>`;
           return;
         }
-        results.scrollTop = 0;
+
         matches.forEach((item) => {
-          const button = document.createElement("button");
-          button.type = "button";
-          button.className = "search-result";
-          button.innerHTML = `<strong>${item.brand} ${item.model}</strong><span>${item.engine} • ${fuelMeta[item.fuel]?.label || item.fuel} • ${formatNumber(item.consumption, 1)} L/100km</span>`;
-          button.addEventListener("click", () => {
-            selectCarFromSearch(item);
-            searchInput.value = `${item.brand} ${item.model} ${item.engine}`;
-            results.innerHTML = "";
+          const option = document.createElement("div");
+          option.className = "search-result";
+          option.tabIndex = 0;
+          option.setAttribute("role", "option");
+          option.innerHTML = `<strong>${item.brand} ${item.model}</strong><span>${item.engine} • ${fuelMeta[item.fuel]?.label || item.fuel} • ${formatNumber(item.consumption, 1)} L/100km</span>`;
+
+          option.addEventListener("click", () => {
+            if (pointerStartedAsScroll) {
+              pointerStartedAsScroll = false;
+              return;
+            }
+            chooseItem(item);
           });
-          results.appendChild(button);
+
+          option.addEventListener("keydown", (event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              chooseItem(item);
+            }
+          });
+
+          results.appendChild(option);
         });
       };
-      results.addEventListener("wheel", (event) => {
-        const atTop = results.scrollTop === 0;
-        const atBottom = Math.ceil(results.scrollTop + results.clientHeight) >= results.scrollHeight;
-        if ((event.deltaY < 0 && !atTop) || (event.deltaY > 0 && !atBottom)) {
-          event.stopPropagation();
-        }
-      }, { passive: true });
 
       searchInput.addEventListener("input", renderResults);
+      searchInput.addEventListener("focus", renderResults);
       searchInput.addEventListener("search", renderResults);
+
       document.addEventListener("click", (event) => {
-        if (!searchInput.parentElement.contains(event.target)) results.innerHTML = "";
+        if (!searchInput.parentElement.contains(event.target)) closeResults();
       });
     }
 
