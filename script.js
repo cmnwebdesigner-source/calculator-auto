@@ -24,10 +24,9 @@ const API = {
       }
     };
 
-    // carDatabase este încărcat din masini.js
+    // Baza auto este incarcata din masini.js
 
-
-    const els = {};
+const els = {};
     const state = {
       fuel: "motorina",
       route: "mixt",
@@ -49,7 +48,7 @@ const API = {
 
     function cacheElements() {
       [
-        "brand", "model", "engine", "base-consumption", "fuel-price", "price-area",
+        "brand", "model", "engine", "car-search", "base-consumption", "fuel-price", "price-area",
         "price-source-mode", "api-status", "api-meta", "price-note", "price-message",
         "distance", "roundtrip-btn", "ac-btn", "passengers", "pass-minus", "pass-plus",
         "total-cost", "summary-subtitle", "summary-car", "summary-distance",
@@ -87,25 +86,41 @@ const API = {
       els["api-status"].innerHTML = html;
     }
 
+    function getCarDatabase() {
+      if (typeof carDatabase !== "undefined" && carDatabase && typeof carDatabase === "object") {
+        return carDatabase;
+      }
+      console.error("masini.js nu este incarcat sau nu contine const carDatabase.");
+      return {};
+    }
+
+    function normalizeSearchText(value) {
+      return String(value || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, " ")
+        .trim();
+    }
+
     function populateCars() {
-      Object.keys(carDatabase).sort((a, b) => a.localeCompare(b, "ro")).forEach((brand) => {
+      const db = getCarDatabase();
+      els.brand.innerHTML = '<option value="">Selecteaza marca</option>';
+      Object.keys(db).sort((a, b) => a.localeCompare(b, "ro")).forEach((brand) => {
         els.brand.add(new Option(brand, brand));
       });
     }
 
     function buildCarSearchIndex() {
+      const db = getCarDatabase();
       const items = [];
-      Object.entries(carDatabase || {}).forEach(([brand, models]) => {
+      Object.entries(db).forEach(([brand, models]) => {
         Object.entries(models || {}).forEach(([model, engines]) => {
           Object.entries(engines || {}).forEach(([engine, data]) => {
-            items.push({
-              brand,
-              model,
-              engine,
-              fuel: data.f,
-              consumption: data.c,
-              label: `${brand} ${model} ${engine}`.toLowerCase()
-            });
+            const fuel = data?.f || "benzina";
+            const consumption = Number(data?.c) || 0;
+            const full = `${brand} ${model} ${engine} ${fuel} ${consumption}`;
+            items.push({ brand, model, engine, fuel, consumption, search: normalizeSearchText(full) });
           });
         });
       });
@@ -114,55 +129,8 @@ const API = {
 
     let carSearchIndex = [];
 
-    function initCarSearch() {
-      const searchInput = document.getElementById("car-search");
-      if (!searchInput) return;
-
-      carSearchIndex = buildCarSearchIndex();
-      const results = document.getElementById("car-search-results");
-      if (!results) return;
-
-      searchInput.addEventListener("input", () => {
-        const query = searchInput.value.trim().toLowerCase();
-        results.innerHTML = "";
-
-        if (query.length < 2) return;
-
-        const matches = carSearchIndex
-          .filter((item) => item.label.includes(query))
-          .slice(0, 10);
-
-        if (!matches.length) {
-          results.innerHTML = `
-            <div class="message warn">
-              <i class="fa-solid fa-circle-info"></i>
-              Nu am găsit masina. Selectează manual sau introdu consumul mixt.
-            </div>
-          `;
-          return;
-        }
-
-        matches.forEach((item) => {
-          const button = document.createElement("button");
-          button.type = "button";
-          button.className = "search-result";
-          button.innerHTML = `
-            <strong>${item.brand} ${item.model}</strong>
-            <span>${item.engine} • ${fuelMeta[item.fuel]?.label || item.fuel} • ${formatNumber(item.consumption, 1)} L/100km</span>
-          `;
-
-          button.addEventListener("click", () => {
-            selectCarFromSearch(item);
-            results.innerHTML = "";
-            searchInput.value = `${item.brand} ${item.model} ${item.engine}`;
-          });
-
-          results.appendChild(button);
-        });
-      });
-    }
-
     function selectCarFromSearch(item) {
+      if (!item) return;
       els.brand.value = item.brand;
       populateModels();
       els.model.value = item.model;
@@ -171,6 +139,48 @@ const API = {
       applyEngine();
     }
 
+    function initCarSearch() {
+      const searchInput = els["car-search"];
+      if (!searchInput) return;
+      carSearchIndex = buildCarSearchIndex();
+      let results = document.getElementById("car-search-results");
+      if (!results) {
+        results = document.createElement("div");
+        results.className = "search-results";
+        results.id = "car-search-results";
+        searchInput.parentElement.appendChild(results);
+      }
+      const renderResults = () => {
+        const query = normalizeSearchText(searchInput.value);
+        results.innerHTML = "";
+        if (query.length < 2) return;
+        const words = query.split(" ").filter(Boolean);
+        const matches = carSearchIndex
+          .filter((item) => words.every((word) => item.search.includes(word)))
+          .slice(0, 12);
+        if (!matches.length) {
+          results.innerHTML = `<div class="message warn"><i class="fa-solid fa-circle-info"></i> Nu am gasit masina. Alege manual marca/modelul sau scrie consumul.</div>`;
+          return;
+        }
+        matches.forEach((item) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "search-result";
+          button.innerHTML = `<strong>${item.brand} ${item.model}</strong><span>${item.engine} • ${fuelMeta[item.fuel]?.label || item.fuel} • ${formatNumber(item.consumption, 1)} L/100km</span>`;
+          button.addEventListener("click", () => {
+            selectCarFromSearch(item);
+            searchInput.value = `${item.brand} ${item.model} ${item.engine}`;
+            results.innerHTML = "";
+          });
+          results.appendChild(button);
+        });
+      };
+      searchInput.addEventListener("input", renderResults);
+      searchInput.addEventListener("search", renderResults);
+      document.addEventListener("click", (event) => {
+        if (!searchInput.parentElement.contains(event.target)) results.innerHTML = "";
+      });
+    }
 
     function populateModels() {
       const brand = els.brand.value;
@@ -181,7 +191,7 @@ const API = {
       state.carName = "Nespecificata";
 
       if (brand) {
-        Object.keys(carDatabase[brand]).sort((a, b) => a.localeCompare(b, "ro")).forEach((model) => {
+        Object.keys(getCarDatabase()[brand] || {}).sort((a, b) => a.localeCompare(b, "ro")).forEach((model) => {
           els.model.add(new Option(model, model));
         });
       }
@@ -197,7 +207,7 @@ const API = {
       state.carName = brand && model ? `${brand} ${model}` : "Nespecificata";
 
       if (brand && model) {
-        Object.keys(carDatabase[brand][model]).sort((a, b) => a.localeCompare(b, "ro")).forEach((engine) => {
+        Object.keys((getCarDatabase()[brand] || {})[model] || {}).sort((a, b) => a.localeCompare(b, "ro")).forEach((engine) => {
           els.engine.add(new Option(engine, engine));
         });
       }
@@ -211,7 +221,8 @@ const API = {
       const engine = els.engine.value;
 
       if (brand && model && engine) {
-        const data = carDatabase[brand][model][engine];
+        const data = ((getCarDatabase()[brand] || {})[model] || {})[engine];
+        if (!data) return;
         els["base-consumption"].value = data.c;
         state.carName = `${brand} ${model} - ${engine}`;
         setFuelType(data.f, { keepLive: true });
@@ -295,7 +306,7 @@ const API = {
       if (state.priceMode === "manual") return "Manual";
       const city = getSelectedCity();
       if (city) return `Live API - ${city.oras}`;
-      if (String(state.area).startsWith("county:")) return `Live API - medie nationala (${state.area.replace("county:", "")})`;
+      if (String(state.area).startsWith("county:")) return `Live API - ${String(state.area).replace("county:", "")} / medie nationala`;
       return "Live API - medie nationala";
     }
 
@@ -308,7 +319,7 @@ const API = {
       const price = getLivePrice();
       els["fuel-price"].value = formatPrice(price);
       const city = getSelectedCity();
-      const areaText = city ? city.oras : (String(state.area).startsWith("county:") ? `${state.area.replace("county:", "")} / media nationala` : "media nationala");
+      const areaText = city ? city.oras : (String(state.area).startsWith("county:") ? `${String(state.area).replace("county:", "")} / media nationala` : "media nationala");
       els["price-note"].textContent = `${fuelMeta[state.fuel].label}: ${formatPrice(price)} Lei/L, ${areaText}.`;
       setMessage("success", "fa-solid fa-circle-check", `Pret aplicat automat pentru ${areaText}.`);
       updateAll();
@@ -403,26 +414,17 @@ const API = {
       const selected = state.area;
       els["price-area"].innerHTML = '<option value="national">Medie nationala</option>';
 
-      const cities = Array.isArray(state.cityPrices) ? state.cityPrices : [];
-      if (cities.length) {
-        const cityGroup = document.createElement("optgroup");
-        cityGroup.label = "Orașe din API";
-        cities
+      if (state.cityPrices.length) {
+        state.cityPrices
           .slice()
           .sort((a, b) => String(a.oras).localeCompare(String(b.oras), "ro"))
           .forEach((city) => {
-            cityGroup.appendChild(new Option(`${city.oras} (${city.judet})`, city.slug));
+            els["price-area"].add(new Option(`${city.oras} (${city.judet})`, city.slug));
           });
-        els["price-area"].appendChild(cityGroup);
-      }
-
-      if (Array.isArray(window.romanianCounties)) {
-        const countyGroup = document.createElement("optgroup");
-        countyGroup.label = "Județe România";
+      } else if (Array.isArray(window.romanianCounties)) {
         window.romanianCounties.forEach((county) => {
-          countyGroup.appendChild(new Option(`${county} - fallback medie națională`, `county:${county}`));
+          els["price-area"].add(new Option(`${county} - medie nationala`, `county:${county}`));
         });
-        els["price-area"].appendChild(countyGroup);
       }
 
       els["price-area"].value = [...els["price-area"].options].some((option) => option.value === selected)
